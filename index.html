@@ -1078,23 +1078,24 @@
   }
 
   function resizeInkCanvas(){
-    if(!inkCanvas) return;
-    const rect = inkWrap ? inkWrap.getBoundingClientRect() : inkCanvas.getBoundingClientRect();
+    if(!inkCanvas || !inkWrap) return;
+    // Μην κάνεις resize όταν το modal είναι κλειστό/κρυφό (rect=0 → canvas.width=0 και μετά δεν γράφει)
+    const rect = inkWrap.getBoundingClientRect();
+    if(rect.width < 10 || rect.height < 10){
+      return; // θα το ξανακαλέσουμε όταν ανοίξει
+    }
     const dpr = window.devicePixelRatio || 1;
-
-    inkCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
-    inkCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+    const w = Math.floor(rect.width * dpr);
+    const h = Math.floor(rect.height * dpr);
+    if(inkCanvas.width === w && inkCanvas.height === h) return;
+    inkCanvas.width = w;
+    inkCanvas.height = h;
     inkCanvas.style.width = rect.width + "px";
     inkCanvas.style.height = rect.height + "px";
-
-    inkCtx = inkCanvas.getContext("2d");
-    inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    inkCtx.setTransform(dpr,0,0,dpr,0,0);
     inkCtx.lineCap = "round";
     inkCtx.lineJoin = "round";
-    inkBaseSize = Number(inkSize?.value || inkBaseSize || 4);
-    inkCtx.lineWidth = inkBaseSize;
-    inkCtx.strokeStyle = (inkColor?.value || "#111827");
-    try{ setInkStyle(); }catch(err){}
+    setInkStyle();
   }
 
   // controls
@@ -1396,6 +1397,3 @@
 
 </body>
 </html>
-
-   
-  
