@@ -267,6 +267,23 @@
         <button class="btn dark" id="open-ink-btn" type="button">✍️ Άνοιξε Πίνακα Γραφής (stylus)</button>
         <span class="muted">Ιδανικό για tablet/iPad: γράφεις με πένα και παίρνεις hint/διόρθωση.</span>
       </div>
+
+      <!-- ✅ INK PREVIEW (NEW) -->
+      <div style="margin-top:10px">
+        <div class="muted"><b>Προεπισκόπηση Πίνακα Γραφής</b></div>
+
+        <img id="ink-preview-img" class="preview"
+             alt="Προεπισκόπηση πίνακα γραφής"
+             style="max-height:220px;display:none" />
+
+        <div id="ink-preview-empty" class="muted" style="margin-top:6px">
+          Δεν έχεις γράψει κάτι ακόμη.
+        </div>
+
+        <div class="row" style="margin-top:8px">
+          <button class="btn ghost" id="ink-preview-clear" type="button">🗑️ Καθάρισε προεπισκόπηση</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -479,7 +496,8 @@
 
       <div class="ink-toolbar">
         <div class="ink-left">
-          <button class="btn primary" id="ink-check-step" type="button">✅ Έλεγξε βήμα</button>
+          <!-- ✅ CHANGED TEXT -->
+          <button class="btn primary" id="ink-check-step" type="button">🤖 Ρώτα ΑΙ</button>
           <button class="btn ghost" id="ink-hint" type="button">🧠 Δώσε hint</button>
           <button class="btn ghost" id="ink-clear" type="button">🔄 Καθάρισε</button>
         </div>
@@ -699,14 +717,12 @@
     const t = (text || "");
     lastAnswerText = t;
 
-    // render for on-page reading
     answerEl.innerHTML = t.replace(/\n/g,"<br>");
     await renderMathIn(answerEl);
 
     showContinueBox(true);
     if (!isAnswerVisible()) showToast();
 
-    // auto-save raw answer (NOT innerText)
     try{
       localStorage.setItem("mathAI:lastAnswer", t);
       localStorage.setItem("mathAI:lastAnswerAt", new Date().toISOString());
@@ -1237,27 +1253,52 @@
   document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
   document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
 
-  /* ===================== INK (ROBUST) ===================== */
+  /* ===================== INK (ROBUST + PREVIEW + RESTORE) ===================== */
   (function(){
     function $(id){ return document.getElementById(id); }
 
-    function openInk(){
-      const bd = $("ink-backdrop");
-      if(!bd){ alert("Λείπει το ink-backdrop από το HTML."); return; }
-      bd.classList.add("show");
-      bd.setAttribute("aria-hidden","false");
-      document.body.style.overflow = "hidden";
-      resizeInkCanvas();
-      setInkStyle();
-      setTimeout(() => $("ink-close")?.focus(), 30);
+    // ===== Ink preview state =====
+    let lastInkDataURL = "";
+
+    function setInkPreviewUI(dataURL){
+      const img = $("ink-preview-img");
+      const empty = $("ink-preview-empty");
+      if(!img || !empty) return;
+
+      if(dataURL){
+        img.src = dataURL;
+        img.style.display = "block";
+        empty.style.display = "none";
+      }else{
+        img.removeAttribute("src");
+        img.style.display = "none";
+        empty.style.display = "block";
+      }
     }
 
-    function closeInk(){
-      const bd = $("ink-backdrop");
-      if(!bd) return;
-      bd.classList.remove("show");
-      bd.setAttribute("aria-hidden","true");
-      document.body.style.overflow = "";
+    function saveInkSnapshot(){
+      const c = $("ink-canvas");
+      if(!c) return "";
+
+      const dataURL = c.toDataURL("image/png");
+      lastInkDataURL = dataURL;
+
+      setInkPreviewUI(dataURL);
+      try{
+        localStorage.setItem("mathAI:lastInk", dataURL);
+        localStorage.setItem("mathAI:lastInkAt", new Date().toISOString());
+      }catch(e){}
+
+      return dataURL;
+    }
+
+    function clearInkSnapshot(){
+      lastInkDataURL = "";
+      setInkPreviewUI("");
+      try{
+        localStorage.removeItem("mathAI:lastInk");
+        localStorage.removeItem("mathAI:lastInkAt");
+      }catch(e){}
     }
 
     let inkCtx = null;
@@ -1294,6 +1335,61 @@
       if(valEl) valEl.textContent = String(size);
       inkCtx.strokeStyle = color;
       inkCtx.lineWidth = size;
+    }
+
+    function restoreInkSnapshot(){
+      const c = $("ink-canvas");
+      if(!c || !inkCtx) return;
+      if(!lastInkDataURL) return;
+
+      const wrap = c.closest(".ink-wrap");
+      if(!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+
+      const img = new Image();
+      img.onload = () => {
+        inkCtx.save();
+        inkCtx.setTransform(1,0,0,1,0,0);
+        inkCtx.clearRect(0,0,c.width,c.height);
+        inkCtx.restore();
+
+        inkCtx.drawImage(img, 0, 0, rect.width, rect.height);
+      };
+      img.src = lastInkDataURL;
+    }
+
+    // load preview from localStorage once
+    try{
+      const stored = localStorage.getItem("mathAI:lastInk") || "";
+      if(stored) lastInkDataURL = stored;
+      setInkPreviewUI(lastInkDataURL);
+    }catch(e){}
+
+    function openInk(){
+      const bd = $("ink-backdrop");
+      if(!bd){ alert("Λείπει το ink-backdrop από το HTML."); return; }
+      bd.classList.add("show");
+      bd.setAttribute("aria-hidden","false");
+      document.body.style.overflow = "hidden";
+      resizeInkCanvas();
+      setInkStyle();
+
+      // ✅ restore last drawing on open
+      restoreInkSnapshot();
+
+      setTimeout(() => $("ink-close")?.focus(), 30);
+    }
+
+    function closeInk(){
+      const bd = $("ink-backdrop");
+      if(!bd) return;
+
+      // ✅ save snapshot so preview updates when closing
+      saveInkSnapshot();
+
+      bd.classList.remove("show");
+      bd.setAttribute("aria-hidden","true");
+      document.body.style.overflow = "";
     }
 
     function getPos(ev){
@@ -1394,7 +1490,7 @@
         const data = await res.json();
         await renderAnswer(data.answer || "Δεν ήρθε απάντηση από τον server.");
         if ($("ink-question")) $("ink-question").value = "";
-        closeInk();
+        closeInk(); // closes + saves snapshot
       }catch(e){
         await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image).");
       }
@@ -1408,7 +1504,14 @@
       const bd = $("ink-backdrop");
       if(bd && e.target === bd) closeInk();
 
-      if(e.target.closest("#ink-clear")) clearInk();
+      if(e.target.closest("#ink-clear")){
+        clearInk();
+        clearInkSnapshot(); // ✅ clear preview too
+      }
+
+      if(e.target.closest("#ink-preview-clear")){
+        clearInkSnapshot(); // ✅ clear only preview + stored
+      }
 
       if(e.target.closest("#ink-send-to-text")){
         const q = ($("ink-question")?.value || "").trim();
