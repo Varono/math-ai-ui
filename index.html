@@ -1,1 +1,279 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <title>math-ai-ui — Ink Canvas</title>
+  <style>
+    :root{--bg:#0b1220;--panel:#111827;--panel2:#0f172a;--text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.18);--shadow:0 10px 30px rgba(0,0,0,.35);--radius:16px}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:14px 16px;border-bottom:1px solid var(--border);background:rgba(17,24,39,.55);backdrop-filter: blur(10px);position:sticky;top:0;z-index:5}
+    header b{display:block;font-size:14px}
+    header span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+    main{padding:16px;max-width:1100px;margin:0 auto}
+    .card{background:linear-gradient(180deg, rgba(17,24,39,.75), rgba(15,23,42,.75));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .head{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .head h2{margin:0;font-size:13px}
+    .sub{margin-left:auto;font-size:12px;color:var(--muted)}
+    .content{padding:12px}
+    .canvasBox{width:100%;height:520px;border-radius:14px;border:1px solid var(--border);background:rgba(2,6,23,.35);overflow:hidden}
+    canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+    .tools{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .toolRow{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:14px;background:rgba(2,6,23,.25)}
+    .toolRow label{font-size:12px;color:var(--muted);min-width:64px}
+    input[type="range"]{width:100%}
+    input[type="color"]{width:42px;height:34px;border:none;background:transparent;padding:0;cursor:pointer}
+    .btnRow{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
+    button{border:1px solid var(--border);background:rgba(15,23,42,.6);color:var(--text);padding:10px 12px;border-radius:14px;cursor:pointer;font-size:13px}
+    button:hover{background:rgba(15,23,42,.85)}
+    .primary{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.16)}
+    .danger{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.12)}
+    .status{margin-top:10px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding:10px 12px;background:rgba(2,6,23,.2)}
+    .dot{display:inline-block;width:8px;height:8px;border-radius:99px;background:#22c55e;margin-right:8px;box-shadow:0 0 0 3px rgba(34,197,94,.16);vertical-align:middle}
+    @media (max-width: 980px){.canvasBox{height:420px}}
+  </style>
+</head>
+<body>
+  <header>
+    <b>math-ai-ui</b>
+    <span>Ink Canvas (mouse / touch / stylus) — stable</span>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="head">
+        <h2>Ink Canvas</h2>
+        <div class="sub" id="canvasInfo">—</div>
+      </div>
+
+      <div class="content">
+        <div class="canvasBox" id="box">
+          <canvas id="ink"></canvas>
+        </div>
+
+        <div class="tools">
+          <div class="toolRow">
+            <label for="penSize">Πάχος</label>
+            <input id="penSize" type="range" min="1" max="28" step="1" value="6" />
+            <span id="penSizeVal" style="font-size:12px;color:var(--muted);min-width:24px;text-align:right;">6</span>
+          </div>
+
+          <div class="toolRow">
+            <label for="penColor">Χρώμα</label>
+            <input id="penColor" type="color" value="#ffffff" />
+            <span id="modeLabel" style="font-size:12px;color:var(--muted);margin-left:auto;">Pen</span>
+          </div>
+
+          <div class="btnRow">
+            <button id="btnPen" class="primary">✍️ Pen</button>
+            <button id="btnEraser">🧽 Eraser</button>
+            <button id="btnUndo">↩️ Undo</button>
+            <button id="btnClear" class="danger">🗑️ Clear</button>
+          </div>
+        </div>
+
+        <div class="status" id="status"><span class="dot"></span>Έτοιμο. Γράψε στο canvas.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const canvas = document.getElementById('ink');
+      const box = document.getElementById('box');
+      const info = document.getElementById('canvasInfo');
+      const statusEl = document.getElementById('status');
+
+      const penSize = document.getElementById('penSize');
+      const penSizeVal = document.getElementById('penSizeVal');
+      const penColor = document.getElementById('penColor');
+      const modeLabel = document.getElementById('modeLabel');
+
+      const btnPen = document.getElementById('btnPen');
+      const btnEraser = document.getElementById('btnEraser');
+      const btnUndo = document.getElementById('btnUndo');
+      const btnClear = document.getElementById('btnClear');
+
+      const ctx = canvas.getContext('2d');
+
+      let dpr = Math.max(1, window.devicePixelRatio || 1);
+      let drawing = false;
+      let last = null;
+      let mode = 'pen';
+      let currentSize = Number(penSize.value);
+      let currentColor = penColor.value;
+
+      const undoStack = [];
+      const UNDO_LIMIT = 20;
+
+      function setStatus(msg){ statusEl.innerHTML = '<span class="dot"></span>' + msg; }
+
+      function cssSize(el){
+        const r = el.getBoundingClientRect();
+        return { w: Math.max(1, Math.floor(r.width)), h: Math.max(1, Math.floor(r.height)) };
+      }
+
+      function resizeCanvas(){
+        const { w, h } = cssSize(box);
+        dpr = Math.max(1, window.devicePixelRatio || 1);
+
+        const prev = (canvas.width && canvas.height) ? ctx.getImageData(0,0,canvas.width,canvas.height) : null;
+
+        canvas.width = Math.max(1, Math.floor(w * dpr));
+        canvas.height = Math.max(1, Math.floor(h * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        ctx.clearRect(0,0,w,h);
+        if (prev){
+          const tmp = document.createElement('canvas');
+          tmp.width = prev.width; tmp.height = prev.height;
+          tmp.getContext('2d').putImageData(prev, 0, 0);
+          ctx.drawImage(tmp, 0, 0, w, h);
+        }
+        info.textContent = `${w}×${h} (CSS), DPR ${dpr.toFixed(2)}`;
+      }
+
+      function getPt(e){
+        const r = canvas.getBoundingClientRect();
+        const x = e.clientX - r.left;
+        const y = e.clientY - r.top;
+        let p = typeof e.pressure === 'number' ? e.pressure : 0.5;
+        if (p === 0) p = 0.5;
+        p = Math.min(1, Math.max(0.1, p));
+        return { x, y, p };
+      }
+
+      function pushUndo(){
+        try{
+          const { w, h } = cssSize(box);
+          const img = ctx.getImageData(0, 0, Math.floor(w*dpr), Math.floor(h*dpr));
+          undoStack.push(img);
+          if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+        }catch(_){}
+      }
+
+      function applyStyle(p){
+        const pressureMul = 0.65 + 0.7 * p;
+        ctx.lineWidth = Math.max(0.8, currentSize * pressureMul);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        if (mode === 'eraser'){
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+        }else{
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = currentColor;
+        }
+      }
+
+      function dot(pt){
+        applyStyle(pt.p);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, ctx.lineWidth/2, 0, Math.PI*2);
+        if (mode === 'eraser'){
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.fill();
+        }else{
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.fillStyle = currentColor;
+          ctx.fill();
+        }
+      }
+
+      function seg(a,b){
+        applyStyle(b.p);
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(b.x,b.y);
+        ctx.stroke();
+      }
+
+      function onDown(e){
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        drawing = true;
+        canvas.setPointerCapture(e.pointerId);
+        pushUndo();
+        const pt = getPt(e);
+        last = pt;
+        dot(pt);
+        setStatus('Γράφεις…');
+        e.preventDefault();
+      }
+      function onMove(e){
+        if (!drawing) return;
+        const pt = getPt(e);
+        if (last) seg(last, pt);
+        last = pt;
+        e.preventDefault();
+      }
+      function onEnd(e){
+        if (!drawing) return;
+        drawing = false;
+        last = null;
+        try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
+        setStatus('Τέλος γραφής ✅');
+        e.preventDefault();
+      }
+
+      canvas.addEventListener('pointerdown', onDown, {passive:false});
+      canvas.addEventListener('pointermove', onMove, {passive:false});
+      canvas.addEventListener('pointerup', onEnd, {passive:false});
+      canvas.addEventListener('pointercancel', onEnd, {passive:false});
+      canvas.addEventListener('pointerleave', onEnd, {passive:false});
+      canvas.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
+      canvas.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+
+      penSize.addEventListener('input', () => {
+        currentSize = Number(penSize.value);
+        penSizeVal.textContent = String(currentSize);
+      });
+      penColor.addEventListener('input', () => currentColor = penColor.value);
+
+      function setMode(m){
+        mode = m;
+        if (m === 'pen'){ btnPen.classList.add('primary'); btnEraser.classList.remove('primary'); modeLabel.textContent='Pen'; setStatus('Pen mode ✅'); }
+        else { btnEraser.classList.add('primary'); btnPen.classList.remove('primary'); modeLabel.textContent='Eraser'; setStatus('Eraser mode ✅'); }
+      }
+
+      btnPen.addEventListener('click', () => setMode('pen'));
+      btnEraser.addEventListener('click', () => setMode('eraser'));
+
+      btnClear.addEventListener('click', () => {
+        pushUndo();
+        const { w, h } = cssSize(box);
+        ctx.clearRect(0,0,w,h);
+        setStatus('Καθαρίστηκε ✅');
+      });
+
+      btnUndo.addEventListener('click', () => {
+        if (!undoStack.length){ setStatus('Δεν υπάρχει άλλο undo.'); return; }
+        const snap = undoStack.pop();
+        const tmp = document.createElement('canvas');
+        tmp.width = snap.width; tmp.height = snap.height;
+        tmp.getContext('2d').putImageData(snap, 0, 0);
+        const { w, h } = cssSize(box);
+        ctx.clearRect(0,0,w,h);
+        ctx.drawImage(tmp, 0, 0, w, h);
+        setStatus('Undo ✅');
+      });
+
+      const ro = new ResizeObserver(() => resizeCanvas());
+      ro.observe(box);
+
+      requestAnimationFrame(() => {
+        resizeCanvas();
+        setMode('pen');
+        penSizeVal.textContent = String(currentSize);
+        setStatus('Έτοιμο ✅ Γράψε στο canvas.');
+      });
+
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) resizeCanvas(); });
+    })();
+  </script>
+</body>
+</html>
+
 
