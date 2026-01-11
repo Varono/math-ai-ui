@@ -1,1 +1,866 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111827" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Βοηθός Μαθηματικών AI – Δρ. Μαρίνος Ευσταθίου</title>
+
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f5f7fb;color:#111827;font-size:14px}
+    main{width:100%;max-width:none;margin:0;padding:12px}
+
+    h1{margin:4px 0 2px 0;font-size:1.2rem}
+    .subtitle{margin:0 0 6px 0;font-size:.8rem;color:#4b5563}
+    .edu-note-small{font-size:.75rem;color:#6b7280;margin-bottom:8px}
+
+    .top-grid{display:grid;gap:10px}
+    @media(min-width:980px){ .top-grid{grid-template-columns:1.35fr .65fr} }
+
+    .card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 8px 20px rgba(15,23,42,.05);padding:10px;margin-bottom:10px}
+    label{font-weight:800;font-size:.9rem}
+    .muted{color:#64748b;font-size:.78rem}
+
+    textarea,input[type="text"],input[type="number"]{width:100%;padding:8px 10px;border-radius:10px;border:1px solid #d1d5db;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.9rem}
+    textarea{min-height:70px}
+    textarea:focus,input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12);outline:none}
+    @media(max-width:650px){ textarea,input[type="text"],input[type="number"]{font-size:16px} }
+
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
+
+    .btn{border:0;border-radius:999px;padding:6px 10px;font-weight:800;cursor:pointer;font-size:.8rem;touch-action:manipulation;white-space:nowrap}
+    .btn.primary{background:#2563eb;color:#fff}
+    .btn.ghost{background:#eef2ff;color:#1e3a8a}
+    .btn.dark{background:#111827;color:#fff}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+
+    .divider{height:1px;background:#e5e7eb;margin:10px 0}
+
+    #math-preview-box{margin-top:6px;border-radius:10px;border:1px dashed #cbd5e1;padding:6px 8px;background:#f9fafb;min-height:34px;font-size:.9rem;color:#0f172a}
+    #math-preview-placeholder{color:#94a3b8;font-size:.75rem}
+    .level-btn.active{background:#2563eb;color:#fff}
+
+    .kbd{background:#eef2ff;border:1px solid #e5e7eb;border-radius:14px;padding:8px;margin-top:10px}
+    .tabs{display:flex;gap:4px;flex-wrap:wrap}
+    .tab{border:0;border-radius:999px;padding:4px 10px;background:#e5e7eb;cursor:pointer;font-weight:800;font-size:.75rem;touch-action:manipulation}
+    .tab.active{background:#2563eb;color:#fff}
+    .keys{margin-top:6px}
+    .key{border:0;border-radius:9px;padding:6px 8px;background:#fff;margin:2px;cursor:pointer;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.75rem;box-shadow:0 1px 2px rgba(0,0,0,.12);touch-action:manipulation}
+
+    .imgwrap{display:grid;gap:8px;margin-top:6px}
+    .preview{width:100%;max-height:280px;object-fit:contain;border-radius:12px;border:1px dashed #cbd5e1;background:#fff}
+
+    .answer{white-space:pre-wrap;border:1px solid #e5e7eb;border-radius:12px;padding:10px;min-height:80px;background:#fafafa;font-size:.9rem}
+    #answer-card{scroll-margin-top:14px}
+
+    .continue-box{margin-top:10px;border-top:1px solid #e5e7eb;padding-top:10px;display:none}
+    .continue-q{font-weight:900;font-size:.85rem;margin-bottom:6px;color:#0f172a}
+
+    .toast{
+      position:fixed;left:50%;transform:translateX(-50%);
+      bottom:14px;z-index:9999;background:rgba(17,24,39,.92);color:#fff;
+      padding:10px 14px;border-radius:999px;box-shadow:0 12px 28px rgba(0,0,0,.22);
+      display:none;align-items:center;gap:10px;max-width:92vw;font-size:.85rem;
+      backdrop-filter: blur(6px);
+    }
+    .toast .toast-btn{
+      border:0;background:#2563eb;color:#fff;font-weight:900;border-radius:999px;
+      padding:8px 12px;cursor:pointer;touch-action:manipulation;white-space:nowrap;
+    }
+
+    .tools-header{display:flex;gap:10px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+    .tool-tabs{display:flex;gap:6px;flex-wrap:wrap}
+    .tool-tab{border:0;border-radius:999px;padding:8px 14px;background:#e5e7eb;cursor:pointer;font-weight:900;font-size:.82rem;touch-action:manipulation}
+    .tool-tab.active{background:#111827;color:#fff}
+    .tool-panel{display:none;margin-top:10px}
+    .tool-panel.active{display:block}
+
+    .mini-card{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fafafa;height:100%}
+    .mini-title{font-weight:950;font-size:.86rem;margin-bottom:8px;color:#0f172a}
+    .result-box{border:1px dashed #cbd5e1;border-radius:12px;padding:8px 10px;background:#fff;min-height:52px}
+    .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+    .matrix-wide{display:grid;gap:10px}
+    @media(min-width:1100px){ .matrix-wide{grid-template-columns:1fr 1fr 1.25fr} }
+    @media(min-width:820px) and (max-width:1099px){ .matrix-wide{grid-template-columns:1fr 1fr} }
+
+    .two-col{display:grid;gap:10px}
+    @media(min-width:920px){ .two-col{grid-template-columns:1.1fr .9fr} }
+
+    .inline-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
+
+    @media(max-width:650px){
+      .btn{padding:10px 14px;font-size:14px}
+      .tool-tab{padding:10px 14px}
+      .tab{padding:8px 12px}
+      .key{padding:10px 10px}
+      .toast{font-size:14px}
+      .toast .toast-btn{padding:10px 14px}
+    }
+
+    .footer-note{font-size:.78rem;color:#4b5563;line-height:1.4}
+
+    /* ===== Ink Modal ===== */
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background:rgba(15,23,42,.55);
+      display:none;
+      z-index:10000;
+      padding:12px;
+      overflow:auto;
+    }
+    .modal-backdrop.show{display:block;}
+    .modal{
+      width:min(1100px, 96vw);
+      margin:24px auto;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:18px;
+      box-shadow:0 20px 50px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .modal-head{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:10px 12px;background:#0f172a;color:#fff;
+    }
+    .modal-title{font-weight:950; font-size:.92rem;}
+    .modal-close{
+      border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:999px;
+      padding:8px 12px;cursor:pointer;font-weight:900;
+    }
+    .modal-body{padding:10px 12px;}
+
+    .ink-controls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      padding:8px 10px;border:1px solid #e5e7eb;border-radius:14px;background:#fafafa;margin:8px 0 10px 0;
+    }
+    .ink-controls label{font-weight:900;font-size:.78rem;margin-right:6px}
+    .ink-controls .ctrl{display:flex;align-items:center;gap:8px}
+    .ink-controls input[type="range"]{width:170px}
+    .ink-controls input[type="color"]{width:42px;height:30px;padding:0;border:0;background:transparent;cursor:pointer}
+    .ink-controls .val{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;color:#334155;min-width:38px}
+
+    .ink-toolbar{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      margin:8px 0 10px 0;
+    }
+    .ink-left{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .ink-right{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+    .ink-hint{font-size:.78rem; color:#475569}
+
+    .ink-wrap{
+      border:1px dashed #cbd5e1;border-radius:14px;background:#fff;
+      height:min(62vh, 560px);
+      width:100%;
+      overflow:hidden;
+      position:relative;
+      touch-action:none; /* κρίσιμο για stylus */
+    }
+    canvas#ink-canvas{
+      width:100%;
+      height:100%;
+      display:block;
+      cursor:crosshair;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action:none;
+      background:#fff;
+    }
+    .ink-minirow{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:8px;}
+    @media(max-width:650px){
+      .modal{margin:10px auto;}
+      .ink-wrap{height:68vh;}
+      .modal-title{font-size:14px;}
+    }
+  </style>
+</head>
+
+<body>
+<main>
+  <h1>Βοηθός Μαθηματικών AI</h1>
+  <p class="subtitle">Δημιουργός: Δρ. Μαρίνος Ευσταθίου – Μαθηματικός (MSc) με PhD στα Παιδαγωγικά / Γνωστική Ψυχολογία</p>
+  <p class="edu-note-small">Το εργαλείο αυτό έχει αναπτυχθεί αποκλειστικά για εκπαιδευτικούς σκοπούς.</p>
+
+  <div class="top-grid">
+    <div class="card">
+      <label for="math-input">Μαθηματική έκφραση</label>
+      <textarea id="math-input" placeholder="π.χ. ∫ x/(x+1) dx, ..."></textarea>
+
+      <div id="math-preview-box">
+        <span id="math-preview-placeholder">Η προεπισκόπηση θα εμφανιστεί εδώ καθώς γράφεις…</span>
+        <div id="math-preview"></div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label for="text-input">Λεκτική απορία</label>
+        <textarea id="text-input" placeholder="Ρώτα εδώ οτιδήποτε (και για Πίνακες/Σειρές/Στατιστική)."></textarea>
+
+        <div class="row" style="margin-top:4px">
+          <span class="muted"><b>Επίπεδο λύσης:</b></span>
+          <button class="btn ghost level-btn active" data-level="lyceum" type="button">Λύκειο</button>
+          <button class="btn ghost level-btn" data-level="university" type="button">Πανεπιστήμιο</button>
+        </div>
+
+        <div class="row">
+          <button class="btn primary" id="ask-btn" type="button">Ρώτα το AI</button>
+          <button class="btn ghost" id="clear-btn" type="button">Καθάρισε</button>
+          <span class="muted" id="status"></span>
+        </div>
+        <div class="muted">Endpoint: <b>/ask</b> (JSON).</div>
+      </div>
+
+      <div class="kbd">
+        <div class="tabs">
+          <button class="tab active" data-layout="num" type="button">123</button>
+          <button class="tab" data-layout="func" type="button">f(x)</button>
+          <button class="tab" data-layout="abc" type="button">ABC</button>
+          <button class="tab" data-layout="sym" type="button">#&¬</button>
+        </div>
+        <div id="keyboard-rows" class="keys"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>Έλεγχος λύσης από φωτογραφία</label>
+      <div class="imgwrap">
+        <input type="file" id="image-input" accept="image/*">
+        <img id="img-preview" class="preview" alt="Προεπισκόπηση φωτογραφίας" />
+      </div>
+      <div class="row">
+        <button class="btn primary" id="check-image-btn" disabled type="button">Έλεγχος Φωτογραφίας</button>
+        <button class="btn ghost" id="remove-img-btn" disabled type="button">Αφαίρεση</button>
+      </div>
+      <div class="muted">Η ίδια λεκτική απορία και το ίδιο επίπεδο θα σταλούν μαζί με τη φωτογραφία.</div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <button class="btn dark" id="open-ink-btn" type="button">✍️ Άνοιξε Πίνακα Γραφής (stylus)</button>
+        <span class="muted">Ιδανικό για tablet/iPad: γράφεις με πένα και παίρνεις hint/διόρθωση.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- (Κράτησα απλά τα βασικά + απάντηση. Αν θες να ξαναβάλουμε ΟΛΟ το μεγάλο “Εργαλεία”, το ξαναβάζω επίσης.) -->
+
+  <div class="card" id="answer-card">
+    <label>Απάντηση AI</label>
+    <div id="ai-answer" class="answer">Περιμένω την πρώτη σου ερώτηση…</div>
+
+    <div id="continue-box" class="continue-box">
+      <div class="continue-q">Να συνεχίσω;</div>
+      <div class="row">
+        <button class="btn dark" id="continue-yes" type="button">ΝΑΙ</button>
+        <button class="btn ghost" id="continue-no" type="button">ΟΧΙ</button>
+        <span class="muted" id="continue-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="footer-note">
+      <strong>Σημαντική σημείωση:</strong><br>
+      Το παρόν εργαλείο προορίζεται <strong>αποκλειστικά για εκπαιδευτικούς σκοπούς</strong>.
+    </div>
+  </div>
+</main>
+
+<!-- ✅ Toast -->
+<div id="answer-toast" class="toast" role="status" aria-live="polite">
+  <span>✅ Η απάντηση σου είναι πιο κάτω.</span>
+  <button id="toast-go" class="toast-btn" type="button">Δες την απάντηση</button>
+</div>
+
+<!-- ✅ Ink Modal (ΠΡΟΣΟΧΗ: είναι ΠΡΙΝ το script, για να το βρίσκει 100%) -->
+<div id="ink-backdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Πίνακας Γραφής">
+    <div class="modal-head">
+      <div class="modal-title">✍️ Πίνακας Γραφής – γράψε άνετα με πένα/δάχτυλο</div>
+      <button class="modal-close" id="ink-close" type="button">Κλείσιμο ✕</button>
+    </div>
+    <div class="modal-body">
+      <label for="ink-question" style="font-weight:900;font-size:.85rem">Λεκτική απορία για αυτό το βήμα</label>
+      <textarea id="ink-question"
+        placeholder="π.χ. γιατί εδώ αλλάζει πρόσημο; / μπορώ να χρησιμοποιήσω αντικατάσταση;"
+        style="min-height:60px;margin-top:6px"></textarea>
+
+      <div class="row" style="margin-top:6px">
+        <button class="btn ghost" id="ink-send-to-text" type="button">➕ Βάλτο στη Λεκτική απορία</button>
+        <span class="muted">Προαιρετικό: το μεταφέρει και στο κύριο πεδίο.</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="ink-controls">
+        <div class="ctrl">
+          <label for="ink-color">Χρώμα</label>
+          <input id="ink-color" type="color" value="#111827" />
+        </div>
+        <div class="ctrl">
+          <label for="ink-size">Πάχος</label>
+          <input id="ink-size" type="range" min="1" max="16" step="1" value="4" />
+          <span class="val" id="ink-size-val">4</span>
+        </div>
+        <span class="muted">Λειτουργεί με ποντίκι, touch και stylus.</span>
+      </div>
+
+      <div class="ink-toolbar">
+        <div class="ink-left">
+          <button class="btn primary" id="ink-check-step" type="button">✅ Έλεγξε βήμα</button>
+          <button class="btn ghost" id="ink-hint" type="button">🧠 Δώσε hint</button>
+          <button class="btn ghost" id="ink-clear" type="button">🔄 Καθάρισε</button>
+        </div>
+        <div class="ink-right">
+          <span class="ink-hint">Στέλνει ό,τι έγραψες + τη Λεκτική απορία + το επίπεδο στο AI.</span>
+        </div>
+      </div>
+
+      <div class="ink-wrap">
+        <canvas id="ink-canvas"></canvas>
+      </div>
+
+      <div class="ink-minirow">
+        <span class="muted">Tip: Γράψε μεγάλα/καθαρά. Αν είναι πίνακες/σύστημα, χώρισε σε γραμμές.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Script ΤΕΛΕΥΤΑΙΟ (100% fix “δεν γράφει”) -->
+<script>
+  const BASE_URL = "https://math-ai-server.onrender.com";
+
+  /* ---------- Toast helpers ---------- */
+  const toast = document.getElementById("answer-toast");
+  const toastGo = document.getElementById("toast-go");
+  const answerCard = document.getElementById("answer-card");
+
+  function showToast(){
+    toast.style.display = "flex";
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => hideToast(), 7000);
+  }
+  function hideToast(){ toast.style.display = "none"; }
+  function isAnswerVisible(){
+    const r = answerCard.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    return (r.top < vh * 0.75) && (r.bottom > vh * 0.25);
+  }
+  function scrollToAnswer(){
+    answerCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    hideToast();
+  }
+  toastGo.addEventListener("click", scrollToAnswer);
+  window.addEventListener("scroll", () => {
+    if (toast.style.display !== "none" && isAnswerVisible()) hideToast();
+  }, { passive:true });
+
+  /* --------- Level --------- */
+  let currentLevel = "lyceum";
+  document.querySelectorAll(".level-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".level-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentLevel = btn.dataset.level;
+    });
+  });
+
+  /* --------- Helpers --------- */
+  const mathInput = document.getElementById("math-input");
+  const textInput = document.getElementById("text-input");
+
+  function insertAtCursor(el, text){
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? el.value.length;
+    el.setRangeText(text, start, end, "end");
+    el.focus();
+  }
+
+  /* --------- Keyboard --------- */
+  const keyboardLayouts = {
+    num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=',' ']],
+    func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','dx'],['sec(x)','csc(x)','π∫','{','}','≤','≥'],['=',' ']],
+    abc: [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','(',')'],['=',' ']],
+    sym: [['#','&','¬','≈','≠','∞'],['≤','≥','∈','∉','⇒','⇔'],['⊂','⊆','⊄','⊇','|','‖'],['=',' ']]
+  };
+  const keyboardRows = document.getElementById("keyboard-rows");
+
+  function insertFromKey(label){
+    let insertText;
+    if (label === ' ') insertText = ' ';
+    else if (label === 'x²') insertText = 'x^2';
+    else if (label === 'xⁿ') insertText = 'x^';
+    else if (label === 'a/b') insertText = '/';
+    else if (label === 'ln') insertText = '\\ln(';
+    else if (label === 'log₁₀') insertText = '\\log_{10}(';
+    else if (label === 'log₍b₎') insertText = '\\log_{b}(';
+    else if (label === '√') insertText = '√( )';
+    else if (label === 'ⁿ√') insertText = '3√( )';
+    else if (label === 'π∫') insertText = 'V = π∫_{a}^{b} f(x)^2 dx';
+    else insertText = label;
+
+    insertAtCursor(mathInput, insertText);
+    updateMathPreview();
+  }
+
+  function loadKeyboard(name){
+    keyboardRows.innerHTML = "";
+    keyboardLayouts[name].forEach(row => {
+      const wrap = document.createElement("div");
+      row.forEach(label => {
+        const b = document.createElement("button");
+        b.className = "key"; b.type = "button";
+        b.textContent = label === " " ? "κενό" : label;
+        b.onclick = () => insertFromKey(label);
+        wrap.appendChild(b);
+      });
+      keyboardRows.appendChild(wrap);
+    });
+  }
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      loadKeyboard(btn.dataset.layout);
+    });
+  });
+  loadKeyboard("num");
+
+  /* --------- Math Preview --------- */
+  const mathPreview = document.getElementById("math-preview");
+  const mathPreviewPlaceholder = document.getElementById("math-preview-placeholder");
+
+  function isProbablyLatex(s){ return /\\(frac|sqrt|int|sum|begin|pi|cdot|left|right|det)/.test(s || ""); }
+
+  function convertToLatex(text){
+    let t = (text || "").trim();
+    if (!t) return "";
+    const alreadyLatex = isProbablyLatex(t);
+
+    t = t.replace(/−/g,'-').replace(/÷/g,'/').replace(/×/g,'*');
+    t = t.replace(/([0-9a-zA-Z\)\}])\s*:\s*([0-9a-zA-Z\\(\{])/g, '$1/$2');
+
+    if (!alreadyLatex){
+      t = t.replace(/π/g,'\\pi ');
+      t = t.replace(/∫/g,'\\int ');
+      t = t.replace(/\s*dx\b/g,'\\, dx');
+
+      t = t.replace(/(\d+)\s*√\s*\(([^)]*)\)/g,'\\sqrt[$1]{$2}');
+      t = t.replace(/(\d+)\s*√\s*([a-zA-Z0-9]+)/g,'\\sqrt[$1]{$2}');
+      t = t.replace(/√\s*\(([^)]*)\)/g,'\\sqrt{$1}');
+      t = t.replace(/√\s*([a-zA-Z0-9]+)/g,'\\sqrt{$1}');
+      t = t.replace(/sqrt\s*\(([^)]*)\)/gi,'\\sqrt{$1}');
+
+      t = t.replace(/([0-9a-zA-Z\\]+)\s*\^\s*\(([^)]+)\)/g,'$1^{ $2 }');
+      t = t.replace(/([a-zA-Z0-9])\^(\d+)/g,'$1^{ $2 }');
+
+      t = t.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g,'\\frac{$1}{$2}');
+      t = t.replace(/([0-9a-zA-Z]+)\s*\/\s*\(([^()]+)\)/g,'\\frac{$1}{$2}');
+      t = t.replace(/([0-9a-zA-Z])\s*\/\s*([0-9a-zA-Z])(?!\s*\^)/g,'\\frac{$1}{$2}');
+    }
+    t = t.replace(/\*/g,'\\cdot ');
+    return t;
+  }
+
+  async function renderMathIn(el){
+    if (window.MathJax && MathJax.typesetPromise){
+      try { await MathJax.typesetPromise([el]); } catch(e){}
+    }
+  }
+
+  async function updateMathPreview(){
+    const raw = mathInput.value;
+    if (!raw.trim()){
+      mathPreview.innerHTML = "";
+      mathPreviewPlaceholder.style.display = "inline";
+      return;
+    }
+    mathPreviewPlaceholder.style.display = "none";
+    const latex = convertToLatex(raw);
+    mathPreview.innerHTML = `\\(${latex}\\)`;
+    await renderMathIn(mathPreview);
+  }
+  mathInput.addEventListener("input", updateMathPreview);
+
+  /* --------- AI Answer + Continue --------- */
+  const answerEl = document.getElementById("ai-answer");
+  const statusEl = document.getElementById("status");
+  const setStatus = (t="") => statusEl.textContent = t;
+
+  const continueBox = document.getElementById("continue-box");
+  const continueYes = document.getElementById("continue-yes");
+  const continueNo  = document.getElementById("continue-no");
+  const continueStatus = document.getElementById("continue-status");
+
+  let lastPromptSent = "";
+  let lastAnswerText = "";
+
+  function showContinueBox(show){
+    continueBox.style.display = show ? "block" : "none";
+    continueStatus.textContent = "";
+    continueYes.disabled = false;
+    continueNo.disabled = false;
+  }
+
+  async function renderAnswer(text){
+    const t = (text || "");
+    lastAnswerText = t;
+    answerEl.innerHTML = t.replace(/\n/g,"<br>");
+    await renderMathIn(answerEl);
+    showContinueBox(true);
+
+    if (!isAnswerVisible()){
+      showToast();
+    }
+  }
+
+  async function askAI(prompt){
+    setStatus("Το AI σκέφτεται…");
+    answerEl.innerHTML = "Το AI σκέφτεται…";
+    await renderMathIn(answerEl);
+    showContinueBox(false);
+
+    try{
+      const res = await fetch(`${BASE_URL}/ask`, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      const ans = data.answer || data.message || JSON.stringify(data, null, 2) || "Δεν ήρθε απάντηση.";
+      await renderAnswer(ans);
+    }catch(e){
+      await renderAnswer("Σφάλμα σύνδεσης με τον server (/ask).");
+    }
+    setStatus("");
+  }
+
+  document.getElementById("ask-btn").addEventListener("click", async () => {
+    hideToast();
+    const math = mathInput.value.trim();
+    const text = textInput.value.trim();
+
+    let bodyParts = [];
+    if (math) bodyParts.push("Μαθηματική έκφραση:\n" + math);
+    if (text) bodyParts.push("Λεκτική απορία:\n" + text);
+    const mainPrompt = bodyParts.join("\n\n") || "Λύσε το 1+1.";
+
+    const levelPrefix = currentLevel === "lyceum"
+      ? "Να λυθεί με μαθηματικά επιπέδου Λυκείου. Απόφυγε πανεπιστημιακές μεθόδους.\n\n"
+      : "Μπορείς να χρησιμοποιήσεις τεχνικές πανεπιστημιακού επιπέδου.\n\n";
+
+    lastPromptSent = levelPrefix + mainPrompt;
+    await askAI(lastPromptSent);
+  });
+
+  document.getElementById("clear-btn").addEventListener("click", async () => {
+    hideToast();
+    mathInput.value = "";
+    textInput.value = "";
+    answerEl.innerHTML = "Έτοιμος/η. Γράψε νέα ερώτηση…";
+    await renderMathIn(answerEl);
+    showContinueBox(false);
+    updateMathPreview();
+  });
+
+  continueYes.addEventListener("click", async () => {
+    hideToast();
+    continueYes.disabled = true;
+    continueNo.disabled = true;
+    continueStatus.textContent = "Συνεχίζω…";
+
+    const followUp =
+      "Συνέχισε την εξήγηση/λύση από το σημείο που έμεινες. " +
+      "Δώσε τα επόμενα βήματα, πιο αναλυτικά, με καθαρή δομή.\n\n" +
+      "ΠΡΟΗΓΟΥΜΕΝΟ PROMPT:\n" + (lastPromptSent || "(κενό)") + "\n\n" +
+      "ΠΡΟΗΓΟΥΜΕΝΗ ΑΠΑΝΤΗΣΗ:\n" + (lastAnswerText || "(κενό)");
+
+    lastPromptSent = followUp;
+    await askAI(followUp);
+  });
+
+  continueNo.addEventListener("click", () => {
+    continueStatus.textContent = "ΟΚ — δεν συνεχίζω.";
+    setTimeout(() => showContinueBox(false), 800);
+  });
+
+  /* --------- Photo check --------- */
+  const imgInput = document.getElementById("image-input");
+  const imgPreview = document.getElementById("img-preview");
+  const checkBtn = document.getElementById("check-image-btn");
+  const removeBtn = document.getElementById("remove-img-btn");
+
+  function resetImageUI(){
+    imgPreview.removeAttribute("src");
+    checkBtn.disabled = true;
+    removeBtn.disabled = true;
+  }
+
+  imgInput.addEventListener("change", () => {
+    const file = imgInput.files && imgInput.files[0];
+    if(!file){ resetImageUI(); return; }
+    const url = URL.createObjectURL(file);
+    imgPreview.src = url;
+    checkBtn.disabled = false;
+    removeBtn.disabled = false;
+  });
+
+  removeBtn.addEventListener("click", () => {
+    imgInput.value = "";
+    resetImageUI();
+  });
+
+  checkBtn.addEventListener("click", async () => {
+    hideToast();
+    const file = imgInput.files && imgInput.files[0];
+    if (!file) { await renderAnswer("Δεν επιλέχθηκε φωτογραφία."); return; }
+
+    setStatus("Το AI αναλύει τη φωτογραφία…");
+    answerEl.innerHTML = "Το AI αναλύει τη φωτογραφία…";
+    await renderMathIn(answerEl);
+    showContinueBox(false);
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("question", textInput.value.trim());
+    formData.append("level", currentLevel);
+
+    try{
+      const res = await fetch(`${BASE_URL}/check-image`, { method:"POST", body: formData });
+      const data = await res.json();
+      await renderAnswer(data.answer || "Δεν ήρθε απάντηση από τον server.");
+    }catch(e){
+      await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image).");
+    }
+    setStatus("");
+  });
+
+  /* ===================== Ink modal (stylus) ===================== */
+  const openInkBtn   = document.getElementById("open-ink-btn");
+  const inkBackdrop  = document.getElementById("ink-backdrop");
+  const inkCloseBtn  = document.getElementById("ink-close");
+  const inkCanvas    = document.getElementById("ink-canvas");
+  const inkWrap      = inkCanvas.closest(".ink-wrap");
+
+  const inkCheckStepBtn = document.getElementById("ink-check-step");
+  const inkHintBtn      = document.getElementById("ink-hint");
+  const inkClearBtn     = document.getElementById("ink-clear");
+  const inkQuestion     = document.getElementById("ink-question");
+  const inkSendToTextBtn= document.getElementById("ink-send-to-text");
+
+  const inkColor   = document.getElementById("ink-color");
+  const inkSize    = document.getElementById("ink-size");
+  const inkSizeVal = document.getElementById("ink-size-val");
+
+  let inkCtx = null;
+  let drawing = false;
+  let activePointerId = null;
+  let lastX = 0, lastY = 0;
+
+  function openInk(){
+    inkBackdrop.classList.add("show");
+    inkBackdrop.setAttribute("aria-hidden","false");
+    document.body.style.overflow = "hidden";
+    resizeInkCanvas();
+    setInkStyle();
+    setTimeout(() => inkCloseBtn.focus(), 30);
+  }
+
+  function closeInk(){
+    inkBackdrop.classList.remove("show");
+    inkBackdrop.setAttribute("aria-hidden","true");
+    document.body.style.overflow = "";
+  }
+
+  function resizeInkCanvas(){
+    const rect = inkWrap.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    // πραγματικά pixels
+    inkCanvas.width  = Math.max(1, Math.floor(rect.width  * dpr));
+    inkCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+
+    // css size
+    inkCanvas.style.width  = rect.width  + "px";
+    inkCanvas.style.height = rect.height + "px";
+
+    inkCtx = inkCanvas.getContext("2d");
+
+    // ΣΧΕΔΙΑΖΟΥΜΕ ΣΕ CSS coordinates (με scaling)
+    inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    inkCtx.lineCap = "round";
+    inkCtx.lineJoin = "round";
+  }
+
+  function setInkStyle(){
+    if (!inkCtx) return;
+    const size = Number(inkSize.value || 4);
+    inkSizeVal.textContent = String(size);
+    inkCtx.strokeStyle = inkColor.value || "#111827";
+    inkCtx.lineWidth = size;
+  }
+
+  function getPos(ev){
+    const r = inkCanvas.getBoundingClientRect();
+    return { x: ev.clientX - r.left, y: ev.clientY - r.top };
+  }
+
+  function startDraw(ev){
+    // επιτρέπουμε 1 active pointer
+    if (activePointerId !== null && ev.pointerId !== activePointerId) return;
+    activePointerId = ev.pointerId;
+
+    drawing = true;
+    setInkStyle();
+
+    const p = getPos(ev);
+    lastX = p.x; lastY = p.y;
+
+    try { inkCanvas.setPointerCapture(ev.pointerId); } catch(e){}
+    ev.preventDefault();
+  }
+
+  function moveDraw(ev){
+    if(!drawing || ev.pointerId !== activePointerId) return;
+    const p = getPos(ev);
+
+    // pressure-aware (αν υπάρχει stylus pressure)
+    const pressure = (typeof ev.pressure === "number" && ev.pressure > 0) ? ev.pressure : 0.5;
+    const base = Number(inkSize.value || 4);
+    inkCtx.lineWidth = base * (0.75 + pressure * 0.9);
+
+    inkCtx.beginPath();
+    inkCtx.moveTo(lastX, lastY);
+    inkCtx.lineTo(p.x, p.y);
+    inkCtx.stroke();
+
+    lastX = p.x; lastY = p.y;
+    ev.preventDefault();
+  }
+
+  function endDraw(ev){
+    if(ev.pointerId !== activePointerId) return;
+    drawing = false;
+    try { inkCanvas.releasePointerCapture(ev.pointerId); } catch(e){}
+    activePointerId = null;
+    ev.preventDefault();
+  }
+
+  function clearInk(){
+    if(!inkCtx) return;
+    // clear in REAL pixels -> προσωρινά reset transform
+    inkCtx.save();
+    inkCtx.setTransform(1,0,0,1,0,0);
+    inkCtx.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+    inkCtx.restore();
+  }
+
+  async function canvasToBlob(){
+    return await new Promise(resolve => {
+      inkCanvas.toBlob(b => resolve(b), "image/png", 0.92);
+    });
+  }
+
+  async function sendInkToAI(mode){
+    const blob = await canvasToBlob();
+    if(!blob){ await renderAnswer("Δεν μπόρεσα να πάρω εικόνα από τον καμβά."); return; }
+
+    const math = mathInput.value.trim();
+    const text = textInput.value.trim();
+    const inkExtra = (inkQuestion.value || "").trim();
+
+    let userAsk = [];
+    if (math) userAsk.push("Μαθηματική έκφραση:\n" + math);
+    if (text) userAsk.push("Λεκτική απορία:\n" + text);
+    if (inkExtra) userAsk.push("Επιπλέον απορία για το γραμμένο βήμα:\n" + inkExtra);
+
+    const modeText = (mode === "hint")
+      ? "ΖΗΤΟΥΜΕΝΟ: Δώσε ΜΟΝΟ hint/κατεύθυνση (όχι πλήρη λύση). Δώσε 1-3 μικρά hints και 1 ερώτηση για να σκεφτεί ο μαθητής."
+      : "ΖΗΤΟΥΜΕΝΟ: Έλεγξε το ΓΡΑΜΜΕΝΟ βήμα/λύση στη φωτογραφία του καμβά. Πες αν είναι σωστό, διόρθωσε λάθη και δείξε το σωστό επόμενο βήμα.";
+
+    const questionForImage = (userAsk.join("\n\n") || " ") + "\n\n" + modeText;
+
+    setStatus(mode === "hint" ? "Το AI ετοιμάζει hint…" : "Το AI ελέγχει το βήμα…");
+    answerEl.innerHTML = mode === "hint" ? "Το AI ετοιμάζει hint…" : "Το AI ελέγχει το βήμα…";
+    await renderMathIn(answerEl);
+    showContinueBox(false);
+
+    const formData = new FormData();
+    formData.append("image", new File([blob], "ink.png", {type:"image/png"}));
+    formData.append("question", questionForImage);
+    formData.append("level", currentLevel);
+
+    try{
+      const res = await fetch(`${BASE_URL}/check-image`, { method:"POST", body: formData });
+      const data = await res.json();
+      await renderAnswer(data.answer || "Δεν ήρθε απάντηση από τον server.");
+      inkQuestion.value = "";
+      closeInk();
+    }catch(e){
+      await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image).");
+    }
+    setStatus("");
+  }
+
+  // open/close
+  openInkBtn.addEventListener("click", () => { hideToast(); openInk(); });
+  inkCloseBtn.addEventListener("click", closeInk);
+
+  // click outside modal closes
+  inkBackdrop.addEventListener("click", (e) => {
+    if (e.target === inkBackdrop) closeInk();
+  });
+
+  // esc closes
+  window.addEventListener("keydown", (e) => {
+    if(e.key === "Escape" && inkBackdrop.classList.contains("show")) closeInk();
+  });
+
+  // resize canvas while open
+  window.addEventListener("resize", () => {
+    if (inkBackdrop.classList.contains("show")) resizeInkCanvas();
+  }, { passive:true });
+
+  // ink controls
+  inkSize.addEventListener("input", setInkStyle);
+  inkColor.addEventListener("input", setInkStyle);
+
+  // drawing events (THE IMPORTANT FIX)
+  inkCanvas.addEventListener("pointerdown", startDraw);
+  inkCanvas.addEventListener("pointermove", moveDraw);
+  inkCanvas.addEventListener("pointerup", endDraw);
+  inkCanvas.addEventListener("pointercancel", endDraw);
+  inkCanvas.addEventListener("pointerleave", endDraw);
+
+  // buttons
+  inkClearBtn.addEventListener("click", clearInk);
+
+  inkSendToTextBtn.addEventListener("click", () => {
+    const q = (inkQuestion.value || "").trim();
+    if(!q) return;
+    const prefix = textInput.value.trim() ? "\n\n" : "";
+    textInput.value = textInput.value.trim() + prefix + "Απορία (από Πίνακα Γραφής):\n" + q;
+    inkQuestion.value = "";
+    textInput.focus();
+  });
+
+  inkHintBtn.addEventListener("click", async () => { hideToast(); await sendInkToAI("hint"); });
+  inkCheckStepBtn.addEventListener("click", async () => { hideToast(); await sendInkToAI("step"); });
+
+  /* init */
+  resetImageUI();
+  updateMathPreview();
+</script>
+
+</body>
+</html>
+
 
