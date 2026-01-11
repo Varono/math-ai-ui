@@ -119,7 +119,7 @@
 
     .footer-note{font-size:.78rem;color:#4b5563;line-height:1.4}
 
-    /* ===== Export/Print controls (δίπλα στην απάντηση) ===== */
+    /* ===== Answer actions ===== */
     .answer-actions{
       display:flex; gap:8px; flex-wrap:wrap; align-items:center;
       margin-top:10px;
@@ -191,7 +191,7 @@
       .modal-title{font-size:14px;}
     }
 
-    /* ===== Print styling (αν τυπώσει ΟΛΗ τη σελίδα) ===== */
+    /* (Optional) If user prints entire page */
     @media print{
       .toast, .kbd, .tool-tabs, .tools-header, .tool-panel, #open-ink-btn,
       #image-input, #check-image-btn, #remove-img-btn, #continue-box,
@@ -413,11 +413,11 @@
     <label>Απάντηση AI</label>
     <div id="ai-answer" class="answer">Περιμένω την πρώτη σου ερώτηση…</div>
 
-    <!-- ✅ ΝΕΟ: Save/Export/Print -->
     <div class="answer-actions">
-      <button class="btn ghost" id="save-answer-btn" type="button">💾 Save απάντηση</button>
-      <button class="btn ghost" id="download-answer-btn" type="button">⬇️ Download .txt</button>
-      <button class="btn primary" id="print-answer-btn" type="button">🖨️ Print (όμορφο)</button>
+      <button class="btn ghost" id="save-answer-btn" type="button">💾 Save</button>
+      <button class="btn ghost" id="download-answer-btn" type="button">⬇️ .txt</button>
+      <button class="btn ghost" id="pdf-answer-btn" type="button">⬇️ PDF</button>
+      <button class="btn primary" id="print-answer-btn" type="button">🖨️ Print</button>
       <span class="pill" id="saved-info">Δεν έχει γίνει αποθήκευση.</span>
     </div>
 
@@ -500,7 +500,7 @@
 </div>
 
 <script>
-  /* ===================== ΡΥΘΜΙΣΗ SERVER ===================== */
+  /* ===================== SERVER ===================== */
   const BASE_URL = "https://math-ai-server.onrender.com";
 
   /* ===================== TOAST ===================== */
@@ -528,7 +528,7 @@
     if (toast.style.display !== "none" && isAnswerVisible()) hideToast();
   }, { passive:true });
 
-  /* ===================== ΕΠΙΠΕΔΟ ===================== */
+  /* ===================== LEVEL ===================== */
   let currentLevel = "lyceum";
   document.querySelectorAll(".level-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -698,13 +698,15 @@
   async function renderAnswer(text){
     const t = (text || "");
     lastAnswerText = t;
+
+    // render for on-page reading
     answerEl.innerHTML = t.replace(/\n/g,"<br>");
     await renderMathIn(answerEl);
-    showContinueBox(true);
 
+    showContinueBox(true);
     if (!isAnswerVisible()) showToast();
 
-    // ✅ auto-save last answer (localStorage)
+    // auto-save raw answer (NOT innerText)
     try{
       localStorage.setItem("mathAI:lastAnswer", t);
       localStorage.setItem("mathAI:lastAnswerAt", new Date().toISOString());
@@ -755,10 +757,13 @@
     hideToast();
     mathInput.value = "";
     textInput.value = "";
+    lastPromptSent = "";
+    lastAnswerText = "";
     answerEl.innerHTML = "Έτοιμος/η. Γράψε νέα ερώτηση…";
     await renderMathIn(answerEl);
     showContinueBox(false);
     updateMathPreview();
+    updateSavedInfo();
   });
 
   continueYes.addEventListener("click", async () => {
@@ -782,15 +787,15 @@
     setTimeout(() => showContinueBox(false), 800);
   });
 
-  /* ===================== ✅ SAVE / EXPORT / PRINT ===================== */
+  /* ===================== ✅ SAVE / TXT / PDF / PRINT (MathJax-safe) ===================== */
   const saveBtn = document.getElementById("save-answer-btn");
   const downloadBtn = document.getElementById("download-answer-btn");
+  const pdfBtn = document.getElementById("pdf-answer-btn");
   const printBtn = document.getElementById("print-answer-btn");
   const savedInfo = document.getElementById("saved-info");
 
-  function getAnswerTextClean(){
-    // παίρνουμε το text όπως φαίνεται (χωρίς <br>)
-    const t = (answerEl?.innerText || "").replace(/\n{3,}/g, "\n\n").trim();
+  function getAnswerTextRaw(){
+    const t = (lastAnswerText || "").toString().replace(/\r/g, "").trim();
     return t || "—";
   }
 
@@ -810,19 +815,19 @@
   }
 
   function saveAnswerNow(){
-    const t = getAnswerTextClean();
+    const t = getAnswerTextRaw();
     try{
       localStorage.setItem("mathAI:lastAnswer", t);
       localStorage.setItem("mathAI:lastAnswerAt", new Date().toISOString());
       updateSavedInfo();
-      alert("✅ Η απάντηση αποθηκεύτηκε (στον browser).");
+      alert("✅ Αποθηκεύτηκε.");
     }catch(e){
       alert("❌ Δεν μπόρεσα να αποθηκεύσω (ίσως private mode).");
     }
   }
 
   function downloadAnswerTxt(){
-    const t = getAnswerTextClean();
+    const t = getAnswerTextRaw();
     const when = new Date();
     const filename = `AI_answer_${when.getFullYear()}-${String(when.getMonth()+1).padStart(2,"0")}-${String(when.getDate()).padStart(2,"0")}_${String(when.getHours()).padStart(2,"0")}${String(when.getMinutes()).padStart(2,"0")}.txt`;
 
@@ -837,20 +842,43 @@
     setTimeout(() => URL.revokeObjectURL(url), 400);
   }
 
-  // ✅ Όμορφο print σε ξεχωριστό “print page”
-  function printAnswerNice(){
-    const text = getAnswerTextClean();
-    const when = new Date().toLocaleString();
+  function escHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
 
-    const w = window.open("", "_blank", "width=950,height=720");
+  function formatForPrint(rawText){
+    const t = (rawText || "").replace(/\r/g,"");
+    const parts = t.split("```");
+    let html = "";
+    for(let i=0;i<parts.length;i++){
+      if(i % 2 === 1){
+        html += `<pre class="code"><code>${escHtml(parts[i].trim())}</code></pre>`;
+      }else{
+        const safe = escHtml(parts[i]);
+        const paras = safe.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+        for(const p of paras){
+          html += `<p>${p.replace(/\n/g,"<br>")}</p>`;
+        }
+      }
+    }
+    return html || "<p>—</p>";
+  }
+
+  function openPrintWindow({autoPrint=true, title="Απάντηση"} = {}){
+    const raw = getAnswerTextRaw();
+    const when = new Date().toLocaleString();
+    const htmlBody = formatForPrint(raw);
+
+    const w = window.open("", "_blank", "width=980,height=760");
     if (!w) {
-      alert("Ο browser μπλόκαρε το popup για εκτύπωση. Επίτρεψε popups και ξανά.");
+      alert("Ο browser μπλόκαρε το popup. Επίτρεψε popups και ξανά.");
       return;
     }
-
-    const esc = (s) => String(s)
-      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
 
     w.document.open();
     w.document.write(`
@@ -859,70 +887,68 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Εκτύπωση — Απάντηση AI</title>
+  <title>${escHtml(title)}</title>
+
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\\\(','\\\\)'], ['$', '$']], displayMath: [['\\\\[','\\\\]']] },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+    };
+  <\/script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
+
   <style>
     @page { margin: 12mm; }
-    html, body { height: auto; }
-    body {
+    body{
+      margin:0;
       font-family: system-ui,-apple-system,"Segoe UI",sans-serif;
-      margin: 0;
       color:#111827;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+      background:#fff;
     }
-    .wrap{
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 0;
-    }
-    h1{
-      margin: 0 0 6px 0;
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: .2px;
-    }
-    .meta{
-      color:#6b7280;
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-    .box{
+    .wrap{ max-width: 900px; margin: 0 auto; }
+    .header{ border-bottom: 1px solid #e5e7eb; padding: 0 0 10px 0; margin: 0 0 12px 0; }
+    h1{ margin:0 0 6px 0; font-size: 18px; font-weight: 900; letter-spacing:.2px; }
+    .meta{ color:#6b7280; font-size:12px; }
+    .content{ font-size: 13px; line-height:1.6; }
+    p{ margin: 0 0 10px 0; }
+    .code{
       border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 12px 14px;
-      background: #fff;
-    }
-    .content{
-      white-space: pre-wrap;
-      word-break: normal;
-      overflow-wrap: anywhere;
-      font-size: 12.5px;
-      line-height: 1.55;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fafafa;
+      overflow:auto;
       font-family: ui-monospace, Menlo, Consolas, "JetBrains Mono", monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      margin: 0 0 12px 0;
+      white-space: pre-wrap;
     }
-    @media print{
-      .wrap{ max-width: none; }
-      .box{ border-color:#d1d5db; }
-    }
+    @media print{ .wrap{ max-width: none; } }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Βοηθός Μαθηματικών AI — Απάντηση</h1>
-    <div class="meta">${esc(when)}</div>
-    <div class="box">
-      <div class="content">${esc(text)}</div>
+    <div class="header">
+      <h1>Βοηθός Μαθηματικών AI — ${escHtml(title)}</h1>
+      <div class="meta">${escHtml(when)}</div>
     </div>
-    <div class="meta" style="margin-top:10px">
-      Tip: Στο Chrome κλείσε “Headers and footers” για να φύγουν αριθμοί/URLs.
+
+    <div class="content" id="content">
+      ${htmlBody}
+    </div>
+
+    <div class="meta" style="margin-top:12px">
+      Tip: Στο Chrome κλείσε “Headers and footers” για να φύγουν αριθμοί σελίδων/URL.
     </div>
   </div>
+
   <script>
-    window.onload = () => {
-      window.focus();
-      window.print();
-      setTimeout(() => window.close(), 400);
-    };
+    function go(){
+      ${autoPrint ? "window.focus(); window.print();" : ""}
+    }
+    window.addEventListener('load', () => setTimeout(go, 450));
   <\/script>
 </body>
 </html>
@@ -930,9 +956,13 @@
     w.document.close();
   }
 
+  function printAnswer(){ openPrintWindow({autoPrint:true, title:"Εκτύπωση"}); }
+  function exportPdf(){ openPrintWindow({autoPrint:true, title:"Export PDF"}); }
+
   saveBtn.addEventListener("click", saveAnswerNow);
   downloadBtn.addEventListener("click", downloadAnswerTxt);
-  printBtn.addEventListener("click", printAnswerNice);
+  printBtn.addEventListener("click", printAnswer);
+  pdfBtn.addEventListener("click", exportPdf);
 
   /* ===================== PHOTO CHECK ===================== */
   const imgInput = document.getElementById("image-input");
@@ -1371,7 +1401,6 @@
       setStatus("");
     }
 
-    // Delegation clicks
     document.addEventListener("click", (e) => {
       if(e.target.closest("#open-ink-btn")) openInk();
       if(e.target.closest("#ink-close")) closeInk();
@@ -1429,9 +1458,6 @@
   updateMathPreview();
   updateMatrixPreview();
   updateSavedInfo();
-
-  // ✅ Tip στον χρήστη για Chrome: Headers/Footers
-  // (Δεν μπορώ να το απενεργοποιήσω από κώδικα — είναι ρύθμιση browser.)
 </script>
 
 </body>
