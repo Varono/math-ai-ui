@@ -4,276 +4,655 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
-  <title>math-ai-ui — Ink Canvas</title>
+  <title>Βοηθός Μαθηματικών AI — Δρ. Μαρίνος Ευσταθίου</title>
+
+  <!-- MathJax -->
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <style>
-    :root{--bg:#0b1220;--panel:#111827;--panel2:#0f172a;--text:#e5e7eb;--muted:#94a3b8;--border:rgba(148,163,184,.18);--shadow:0 10px 30px rgba(0,0,0,.35);--radius:16px}
+    :root{
+      --bg:#0b1220;
+      --panel:#0f172a;
+      --panel2:#111827;
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --border:rgba(148,163,184,.18);
+      --shadow:0 12px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --accent:#2563eb;
+      --accent2:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --white:#ffffff;
+    }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    header{padding:14px 16px;border-bottom:1px solid var(--border);background:rgba(17,24,39,.55);backdrop-filter: blur(10px);position:sticky;top:0;z-index:5}
-    header b{display:block;font-size:14px}
-    header span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
-    main{padding:16px;max-width:1100px;margin:0 auto}
-    .card{background:linear-gradient(180deg, rgba(17,24,39,.75), rgba(15,23,42,.75));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-    .head{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-    .head h2{margin:0;font-size:13px}
-    .sub{margin-left:auto;font-size:12px;color:var(--muted)}
-    .content{padding:12px}
-    .canvasBox{width:100%;height:520px;border-radius:14px;border:1px solid var(--border);background:rgba(2,6,23,.35);overflow:hidden}
-    canvas{width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
-    .tools{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .toolRow{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:14px;background:rgba(2,6,23,.25)}
-    .toolRow label{font-size:12px;color:var(--muted);min-width:64px}
-    input[type="range"]{width:100%}
-    input[type="color"]{width:42px;height:34px;border:none;background:transparent;padding:0;cursor:pointer}
-    .btnRow{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
-    button{border:1px solid var(--border);background:rgba(15,23,42,.6);color:var(--text);padding:10px 12px;border-radius:14px;cursor:pointer;font-size:13px}
-    button:hover{background:rgba(15,23,42,.85)}
-    .primary{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.16)}
-    .danger{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.12)}
-    .status{margin-top:10px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);padding:10px 12px;background:rgba(2,6,23,.2)}
-    .dot{display:inline-block;width:8px;height:8px;border-radius:99px;background:#22c55e;margin-right:8px;box-shadow:0 0 0 3px rgba(34,197,94,.16);vertical-align:middle}
-    @media (max-width: 980px){.canvasBox{height:420px}}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 0%, rgba(37,99,235,.18), transparent 55%),
+                  radial-gradient(900px 600px at 95% 10%, rgba(34,197,94,.12), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+
+    header{
+      position:sticky; top:0; z-index:5;
+      background: rgba(15,23,42,.72);
+      backdrop-filter: blur(10px);
+      border-bottom:1px solid var(--border);
+    }
+    .wrap{max-width:1180px;margin:0 auto;padding:14px 16px}
+    .brand{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .brand h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .brand small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+
+    main{max-width:1180px;margin:0 auto;padding:16px}
+    .grid{
+      display:grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap:12px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(17,24,39,.8), rgba(15,23,42,.85));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:12px;
+    }
+    label{display:block;font-weight:800;font-size:14px;margin:0 0 6px}
+    .muted{color:var(--muted);font-size:12px}
+
+    textarea, input[type="text"], input[type="number"]{
+      width:100%;
+      border-radius:12px;
+      border:1px solid rgba(148,163,184,.22);
+      padding:10px 12px;
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      outline:none;
+      font-size:14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "JetBrains Mono", monospace;
+    }
+    textarea{min-height:72px;resize:vertical}
+    textarea:focus, input:focus{border-color: rgba(37,99,235,.6); box-shadow: 0 0 0 3px rgba(37,99,235,.15)}
+
+    .row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .btn{
+      border:0; cursor:pointer;
+      border-radius:999px;
+      padding:8px 12px;
+      font-weight:900;
+      font-size:13px;
+      color: #fff;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(148,163,184,.20);
+      transition: transform .06s ease, background .12s ease;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.10)}
+    .btn:active{transform: translateY(0px)}
+    .btn.primary{background: rgba(37,99,235,.95); border-color: rgba(37,99,235,.35)}
+    .btn.success{background: rgba(34,197,94,.9); border-color: rgba(34,197,94,.25)}
+    .btn.warn{background: rgba(245,158,11,.9); border-color: rgba(245,158,11,.25)}
+    .btn.danger{background: rgba(239,68,68,.9); border-color: rgba(239,68,68,.25)}
+    .btn.ghost{background: rgba(255,255,255,.04)}
+    .btn:disabled{opacity:.55; cursor:not-allowed; transform:none}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 10px; border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+    .previewBox{
+      border:1px dashed rgba(148,163,184,.25);
+      background: rgba(255,255,255,.02);
+      border-radius:12px;
+      padding:10px 12px;
+      min-height:44px;
+    }
+
+    .twoCols{
+      display:grid; grid-template-columns: 1fr 1fr; gap:12px;
+    }
+    @media(max-width:980px){ .twoCols{grid-template-columns:1fr} }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      background: rgba(15,23,42,.92);
+      border: 1px solid rgba(148,163,184,.22);
+      border-radius: 14px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow);
+      max-width: 520px;
+      display:none;
+      z-index: 100;
+    }
+    .toast.show{display:block}
+    .toast strong{display:block;font-size:13px;margin-bottom:2px}
+    .toast span{color:var(--muted);font-size:12px}
+
+    /* Modal / Ink Canvas */
+    .modalOverlay{
+      position: fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      z-index: 200;
+      padding: 16px;
+    }
+    .modalOverlay.open{display:flex; align-items:center; justify-content:center}
+    .modal{
+      width:min(1100px, 100%);
+      background: linear-gradient(180deg, rgba(17,24,39,.95), rgba(15,23,42,.95));
+      border:1px solid rgba(148,163,184,.22);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .modalHeader{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(148,163,184,.18);
+    }
+    .modalHeader b{font-size:14px}
+    .modalBody{padding:12px}
+    .canvasWrap{
+      border:1px solid rgba(148,163,184,.18);
+      border-radius: 16px;
+      overflow:hidden;
+      background: radial-gradient(900px 500px at 30% 0%, rgba(37,99,235,.10), transparent 55%),
+                  rgba(2,6,23,.55);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+    }
+    canvas{display:block; width:100%; height:520px; touch-action:none;}
+    @media(max-width:650px){ canvas{height:420px} }
+
+    .controls{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+      padding-top:10px;
+    }
+    .slider{
+      display:flex; align-items:center; gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size:12px;
+      font-weight:800;
+    }
+    input[type="range"]{width:160px}
+    input[type="color"]{
+      width:34px; height:34px;
+      border:none; background:transparent; padding:0;
+      cursor:pointer;
+    }
+
+    .imgChip{
+      display:flex; gap:10px; align-items:center;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(255,255,255,.03);
+      margin-top:10px;
+    }
+    .imgChip img{
+      width:70px; height:50px; object-fit:cover;
+      border-radius:10px;
+      border:1px solid rgba(148,163,184,.18);
+      background: rgba(255,255,255,.04);
+    }
+    .spacer{height:10px}
   </style>
 </head>
+
 <body>
   <header>
-    <b>math-ai-ui</b>
-    <span>Ink Canvas (mouse / touch / stylus) — stable</span>
+    <div class="wrap brand">
+      <div>
+        <h1>Βοηθός Μαθηματικών AI</h1>
+        <small>Δημιουργός: Δρ. Μαρίνος Ευσταθίου — Μαθηματικός (MSc) & PhD στη Γνωστική Ψυχολογία</small>
+      </div>
+      <div class="pill" id="uiBadge">UI: Stable</div>
+    </div>
   </header>
 
   <main>
-    <section class="card">
-      <div class="head">
-        <h2>Ink Canvas</h2>
-        <div class="sub" id="canvasInfo">—</div>
-      </div>
+    <div class="grid">
+      <!-- LEFT -->
+      <section class="card">
+        <div class="twoCols">
+          <div>
+            <label for="mathInput">Μαθηματική έκφραση</label>
+            <textarea id="mathInput" placeholder="π.χ. \int \frac{x}{x+1}\,dx ή  \sum_{k=1}^n k^2"></textarea>
+            <div class="spacer"></div>
+            <div class="muted">Προεπισκόπηση (MathJax):</div>
+            <div class="previewBox" id="mathPreview">Η προεπισκόπηση θα εμφανιστεί εδώ καθώς γράφεις…</div>
+          </div>
 
-      <div class="content">
-        <div class="canvasBox" id="box">
-          <canvas id="ink"></canvas>
+          <div>
+            <label for="verbalInput">Λεκτική απορία</label>
+            <textarea id="verbalInput" placeholder="Ρώτα εδώ οτιδήποτε (και για Πίνακες/Σειρές/Στατιστική)."></textarea>
+
+            <div class="spacer"></div>
+            <label>Επίπεδο λύσης</label>
+            <div class="row">
+              <button class="btn primary" id="lvlLykeio">Λύκειο</button>
+              <button class="btn ghost" id="lvlUni">Πανεπιστήμιο</button>
+              <span class="pill" id="lvlTag">Λύκειο</span>
+            </div>
+
+            <div class="spacer"></div>
+            <div class="row">
+              <button class="btn warn" id="openInkBtn">✍️ Άνοιξε Πίνακα Γραφής (stylus)</button>
+              <button class="btn ghost" id="clearAllBtn">Καθάρισε</button>
+              <button class="btn success" id="askBtn">Ρώτα το AI</button>
+            </div>
+
+            <div class="spacer"></div>
+            <div class="muted">Endpoint: <b>/ask</b> (JSON). Θα σταλεί και εικόνα αν έχεις γράψει στο canvas.</div>
+
+            <div id="attachedInk" style="display:none" class="imgChip">
+              <img id="inkThumb" alt="ink preview"/>
+              <div style="min-width:0">
+                <div style="font-weight:900">Έτοιμο συνημμένο από Πίνακα Γραφής</div>
+                <div class="muted" id="inkMeta">PNG εικόνα</div>
+                <div class="row" style="margin-top:6px">
+                  <button class="btn danger" id="removeInkBtn">Αφαίρεση</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
 
-        <div class="tools">
-          <div class="toolRow">
-            <label for="penSize">Πάχος</label>
-            <input id="penSize" type="range" min="1" max="28" step="1" value="6" />
-            <span id="penSizeVal" style="font-size:12px;color:var(--muted);min-width:24px;text-align:right;">6</span>
-          </div>
+        <div class="spacer"></div>
+        <label for="answerBox">Απάντηση</label>
+        <div class="previewBox" id="answerBox" style="min-height:160px">
+          Η απάντηση θα εμφανιστεί εδώ…
+        </div>
+      </section>
 
-          <div class="toolRow">
-            <label for="penColor">Χρώμα</label>
-            <input id="penColor" type="color" value="#ffffff" />
-            <span id="modeLabel" style="font-size:12px;color:var(--muted);margin-left:auto;">Pen</span>
-          </div>
+      <!-- RIGHT -->
+      <aside class="card">
+        <label>Έλεγχος λύσης από φωτογραφία</label>
+        <div class="muted">Αν αργότερα θέλεις upload φωτογραφίας, το βάζουμε εδώ (file input) και στέλνουμε στο backend.</div>
+        <div class="spacer"></div>
 
-          <div class="btnRow">
-            <button id="btnPen" class="primary">✍️ Pen</button>
-            <button id="btnEraser">🧽 Eraser</button>
-            <button id="btnUndo">↩️ Undo</button>
-            <button id="btnClear" class="danger">🗑️ Clear</button>
-          </div>
+        <input type="file" id="photoInput" accept="image/*" />
+        <div class="spacer"></div>
+        <div class="row">
+          <button class="btn primary" id="checkPhotoBtn">Έλεγχος Φωτογραφίας</button>
+          <button class="btn ghost" id="removePhotoBtn">Αφαίρεση</button>
         </div>
 
-        <div class="status" id="status"><span class="dot"></span>Έτοιμο. Γράψε στο canvas.</div>
-      </div>
-    </section>
+        <div class="spacer"></div>
+        <div class="muted">Σημείωση: αυτή τη στιγμή το demo στέλνει μόνο JSON στο <b>/ask</b>. Αν θες και φωτογραφία/ink μαζί, το backend πρέπει να δέχεται <b>multipart/form-data</b>.</div>
+      </aside>
+    </div>
   </main>
 
-  <script>
-    (() => {
-      const canvas = document.getElementById('ink');
-      const box = document.getElementById('box');
-      const info = document.getElementById('canvasInfo');
-      const statusEl = document.getElementById('status');
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <strong id="toastTitle">Ενημέρωση</strong>
+    <span id="toastMsg">...</span>
+  </div>
 
-      const penSize = document.getElementById('penSize');
-      const penSizeVal = document.getElementById('penSizeVal');
-      const penColor = document.getElementById('penColor');
-      const modeLabel = document.getElementById('modeLabel');
+  <!-- Ink Modal -->
+  <div class="modalOverlay" id="inkOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Πίνακας Γραφής">
+      <div class="modalHeader">
+        <div>
+          <b>Πίνακας Γραφής — γράφε άνετα με πέννα/δάχτυλο</b>
+          <div class="muted">Ιδανικό για tablet/iPad/pen. Μπορείς να το στείλεις μαζί με την ερώτηση.</div>
+        </div>
+        <button class="btn ghost" id="closeInkBtn">Κλείσιμο ✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="canvasWrap">
+          <canvas id="inkCanvas"></canvas>
+        </div>
 
-      const btnPen = document.getElementById('btnPen');
-      const btnEraser = document.getElementById('btnEraser');
-      const btnUndo = document.getElementById('btnUndo');
-      const btnClear = document.getElementById('btnClear');
+        <div class="controls">
+          <div class="slider">
+            Χρώμα
+            <input type="color" id="inkColor" value="#ffffff" />
+          </div>
 
-      const ctx = canvas.getContext('2d');
+          <div class="slider">
+            Πάχος
+            <input type="range" id="inkSize" min="1" max="20" value="6" />
+            <span id="inkSizeLabel" style="min-width:24px;display:inline-block;text-align:right;">6</span>
+          </div>
 
-      let dpr = Math.max(1, window.devicePixelRatio || 1);
-      let drawing = false;
-      let last = null;
-      let mode = 'pen';
-      let currentSize = Number(penSize.value);
-      let currentColor = penColor.value;
+          <button class="btn ghost" id="undoBtn">↶ Undo</button>
+          <button class="btn danger" id="clearInkBtn">Καθάρισε</button>
 
-      const undoStack = [];
-      const UNDO_LIMIT = 20;
+          <span class="pill">Λειτουργεί με mouse / touch / stylus</span>
 
-      function setStatus(msg){ statusEl.innerHTML = '<span class="dot"></span>' + msg; }
+          <div style="flex:1"></div>
 
-      function cssSize(el){
-        const r = el.getBoundingClientRect();
-        return { w: Math.max(1, Math.floor(r.width)), h: Math.max(1, Math.floor(r.height)) };
-      }
+          <button class="btn success" id="saveInkBtn">Αποθήκευση & χρήση</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      function resizeCanvas(){
-        const { w, h } = cssSize(box);
-        dpr = Math.max(1, window.devicePixelRatio || 1);
+<script>
+/* =========================
+   Small helpers
+========================= */
+const $ = (id) => document.getElementById(id);
 
-        const prev = (canvas.width && canvas.height) ? ctx.getImageData(0,0,canvas.width,canvas.height) : null;
+function toast(title, msg){
+  const t = $("toast");
+  $("toastTitle").textContent = title || "Ενημέρωση";
+  $("toastMsg").textContent = msg || "";
+  t.classList.add("show");
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove("show"), 2600);
+}
 
-        canvas.width = Math.max(1, Math.floor(w * dpr));
-        canvas.height = Math.max(1, Math.floor(h * dpr));
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+/* =========================
+   Math preview (MathJax)
+========================= */
+const mathInput = $("mathInput");
+const mathPreview = $("mathPreview");
 
-        ctx.clearRect(0,0,w,h);
-        if (prev){
-          const tmp = document.createElement('canvas');
-          tmp.width = prev.width; tmp.height = prev.height;
-          tmp.getContext('2d').putImageData(prev, 0, 0);
-          ctx.drawImage(tmp, 0, 0, w, h);
-        }
-        info.textContent = `${w}×${h} (CSS), DPR ${dpr.toFixed(2)}`;
-      }
+let mjTimer = null;
+function updateMathPreview(){
+  const raw = (mathInput.value || "").trim();
+  if(!raw){
+    mathPreview.textContent = "Η προεπισκόπηση θα εμφανιστεί εδώ καθώς γράφεις…";
+    return;
+  }
+  // Render as TeX
+  mathPreview.innerHTML = "\\(" + raw.replaceAll("\n"," ") + "\\)";
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetClear([mathPreview]);
+    MathJax.typesetPromise([mathPreview]).catch(()=>{});
+  }
+}
+mathInput.addEventListener("input", () => {
+  clearTimeout(mjTimer);
+  mjTimer = setTimeout(updateMathPreview, 120);
+});
+window.addEventListener("load", () => setTimeout(updateMathPreview, 400));
 
-      function getPt(e){
-        const r = canvas.getBoundingClientRect();
-        const x = e.clientX - r.left;
-        const y = e.clientY - r.top;
-        let p = typeof e.pressure === 'number' ? e.pressure : 0.5;
-        if (p === 0) p = 0.5;
-        p = Math.min(1, Math.max(0.1, p));
-        return { x, y, p };
-      }
+/* =========================
+   Level toggle
+========================= */
+let level = "lykeio";
+const lvlTag = $("lvlTag");
+$("lvlLykeio").addEventListener("click", ()=>{
+  level="lykeio";
+  $("lvlLykeio").classList.add("primary");
+  $("lvlLykeio").classList.remove("ghost");
+  $("lvlUni").classList.add("ghost");
+  $("lvlUni").classList.remove("primary");
+  lvlTag.textContent="Λύκειο";
+});
+$("lvlUni").addEventListener("click", ()=>{
+  level="uni";
+  $("lvlUni").classList.add("primary");
+  $("lvlUni").classList.remove("ghost");
+  $("lvlLykeio").classList.add("ghost");
+  $("lvlLykeio").classList.remove("primary");
+  lvlTag.textContent="Πανεπιστήμιο";
+});
 
-      function pushUndo(){
-        try{
-          const { w, h } = cssSize(box);
-          const img = ctx.getImageData(0, 0, Math.floor(w*dpr), Math.floor(h*dpr));
-          undoStack.push(img);
-          if (undoStack.length > UNDO_LIMIT) undoStack.shift();
-        }catch(_){}
-      }
+/* =========================
+   Ink Canvas (Modal)
+========================= */
+const overlay = $("inkOverlay");
+const canvas = $("inkCanvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-      function applyStyle(p){
-        const pressureMul = 0.65 + 0.7 * p;
-        ctx.lineWidth = Math.max(0.8, currentSize * pressureMul);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        if (mode === 'eraser'){
-          ctx.globalCompositeOperation = 'destination-out';
-          ctx.strokeStyle = 'rgba(0,0,0,1)';
-        }else{
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.strokeStyle = currentColor;
-        }
-      }
+let drawing = false;
+let last = null;
+let strokes = []; // store image snapshots for undo
 
-      function dot(pt){
-        applyStyle(pt.p);
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, ctx.lineWidth/2, 0, Math.PI*2);
-        if (mode === 'eraser'){
-          ctx.globalCompositeOperation = 'destination-out';
-          ctx.fill();
-        }else{
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = currentColor;
-          ctx.fill();
-        }
-      }
+function resizeCanvas(){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.floor(rect.width * dpr));
+  const h = Math.max(1, Math.floor(rect.height * dpr));
 
-      function seg(a,b){
-        applyStyle(b.p);
-        ctx.beginPath();
-        ctx.moveTo(a.x,a.y);
-        ctx.lineTo(b.x,b.y);
-        ctx.stroke();
-      }
+  // Save current pixels
+  const prev = canvas.width && canvas.height ? canvas.toDataURL("image/png") : null;
 
-      function onDown(e){
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        drawing = true;
-        canvas.setPointerCapture(e.pointerId);
-        pushUndo();
-        const pt = getPt(e);
-        last = pt;
-        dot(pt);
-        setStatus('Γράφεις…');
-        e.preventDefault();
-      }
-      function onMove(e){
-        if (!drawing) return;
-        const pt = getPt(e);
-        if (last) seg(last, pt);
-        last = pt;
-        e.preventDefault();
-      }
-      function onEnd(e){
-        if (!drawing) return;
-        drawing = false;
-        last = null;
-        try{ canvas.releasePointerCapture(e.pointerId); }catch(_){}
-        setStatus('Τέλος γραφής ✅');
-        e.preventDefault();
-      }
+  canvas.width = w;
+  canvas.height = h;
 
-      canvas.addEventListener('pointerdown', onDown, {passive:false});
-      canvas.addEventListener('pointermove', onMove, {passive:false});
-      canvas.addEventListener('pointerup', onEnd, {passive:false});
-      canvas.addEventListener('pointercancel', onEnd, {passive:false});
-      canvas.addEventListener('pointerleave', onEnd, {passive:false});
-      canvas.addEventListener('touchstart', e => e.preventDefault(), {passive:false});
-      canvas.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+  // background (transparent; looks dark because container)
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      penSize.addEventListener('input', () => {
-        currentSize = Number(penSize.value);
-        penSizeVal.textContent = String(currentSize);
-      });
-      penColor.addEventListener('input', () => currentColor = penColor.value);
+  // restore
+  if(prev){
+    const img = new Image();
+    img.onload = ()=> ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    img.src = prev;
+  }
+}
+window.addEventListener("resize", ()=> {
+  if(overlay.classList.contains("open")) resizeCanvas();
+});
 
-      function setMode(m){
-        mode = m;
-        if (m === 'pen'){ btnPen.classList.add('primary'); btnEraser.classList.remove('primary'); modeLabel.textContent='Pen'; setStatus('Pen mode ✅'); }
-        else { btnEraser.classList.add('primary'); btnPen.classList.remove('primary'); modeLabel.textContent='Eraser'; setStatus('Eraser mode ✅'); }
-      }
+function openInk(){
+  if(!overlay) return;
+  overlay.classList.add("open");
+  overlay.setAttribute("aria-hidden", "false");
+  setTimeout(resizeCanvas, 50);
+  toast("Πίνακας Γραφής", "Γράψε και πάτα «Αποθήκευση & χρήση» για να σταλεί μαζί με την ερώτηση.");
+}
+function closeInk(){
+  if(!overlay) return;
+  overlay.classList.remove("open");
+  overlay.setAttribute("aria-hidden", "true");
+}
 
-      btnPen.addEventListener('click', () => setMode('pen'));
-      btnEraser.addEventListener('click', () => setMode('eraser'));
+$("openInkBtn").addEventListener("click", openInk);
+$("closeInkBtn").addEventListener("click", closeInk);
+overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeInk(); });
 
-      btnClear.addEventListener('click', () => {
-        pushUndo();
-        const { w, h } = cssSize(box);
-        ctx.clearRect(0,0,w,h);
-        setStatus('Καθαρίστηκε ✅');
-      });
+function getPos(e){
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
 
-      btnUndo.addEventListener('click', () => {
-        if (!undoStack.length){ setStatus('Δεν υπάρχει άλλο undo.'); return; }
-        const snap = undoStack.pop();
-        const tmp = document.createElement('canvas');
-        tmp.width = snap.width; tmp.height = snap.height;
-        tmp.getContext('2d').putImageData(snap, 0, 0);
-        const { w, h } = cssSize(box);
-        ctx.clearRect(0,0,w,h);
-        ctx.drawImage(tmp, 0, 0, w, h);
-        setStatus('Undo ✅');
-      });
+  let clientX, clientY;
+  if(e.touches && e.touches[0]){
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  return {
+    x: (clientX - rect.left) * dpr,
+    y: (clientY - rect.top) * dpr
+  };
+}
 
-      const ro = new ResizeObserver(() => resizeCanvas());
-      ro.observe(box);
+function pushSnapshot(){
+  // keep up to 30
+  try{
+    strokes.push(canvas.toDataURL("image/png"));
+    if(strokes.length > 30) strokes.shift();
+  }catch(_){}
+}
 
-      requestAnimationFrame(() => {
-        resizeCanvas();
-        setMode('pen');
-        penSizeVal.textContent = String(currentSize);
-        setStatus('Έτοιμο ✅ Γράψε στο canvas.');
-      });
+function startDraw(e){
+  drawing = true;
+  last = getPos(e);
+  pushSnapshot();
+}
+function moveDraw(e){
+  if(!drawing) return;
+  e.preventDefault();
+  const p = getPos(e);
+  const color = $("inkColor").value || "#ffffff";
+  const size = Number($("inkSize").value || 6);
 
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) resizeCanvas(); });
-    })();
-  </script>
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = color;
+  ctx.lineWidth = size * (window.devicePixelRatio || 1);
+
+  ctx.beginPath();
+  ctx.moveTo(last.x, last.y);
+  ctx.lineTo(p.x, p.y);
+  ctx.stroke();
+
+  last = p;
+}
+function endDraw(){
+  drawing = false;
+  last = null;
+}
+
+canvas.addEventListener("pointerdown", startDraw);
+canvas.addEventListener("pointermove", moveDraw);
+canvas.addEventListener("pointerup", endDraw);
+canvas.addEventListener("pointercancel", endDraw);
+canvas.addEventListener("pointerleave", endDraw);
+
+$("inkSize").addEventListener("input", ()=>{
+  $("inkSizeLabel").textContent = $("inkSize").value;
+});
+
+$("clearInkBtn").addEventListener("click", ()=>{
+  pushSnapshot();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+});
+
+$("undoBtn").addEventListener("click", ()=>{
+  const prev = strokes.pop();
+  if(!prev){
+    toast("Undo", "Δεν υπάρχει προηγούμενο βήμα.");
+    return;
+  }
+  const img = new Image();
+  img.onload = ()=>{
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+  img.src = prev;
+});
+
+/* =========================
+   Attach ink to request
+========================= */
+let inkDataUrl = null;
+
+function setInkAttachment(dataUrl){
+  inkDataUrl = dataUrl;
+  if(!dataUrl){
+    $("attachedInk").style.display = "none";
+    $("inkThumb").src = "";
+    $("inkMeta").textContent = "PNG εικόνα";
+    return;
+  }
+  $("attachedInk").style.display = "flex";
+  $("inkThumb").src = dataUrl;
+  // rough size estimate
+  const bytes = Math.round((dataUrl.length * 3) / 4); // approx
+  const kb = Math.round(bytes/1024);
+  $("inkMeta").textContent = `PNG (~${kb} KB)`;
+}
+
+$("saveInkBtn").addEventListener("click", ()=>{
+  try{
+    const dataUrl = canvas.toDataURL("image/png");
+    setInkAttachment(dataUrl);
+    closeInk();
+    toast("Έτοιμο!", "Το σκίτσο/γραφή κρατήθηκε και θα σταλεί μαζί με την ερώτηση.");
+  }catch(err){
+    toast("Σφάλμα", "Δεν μπόρεσα να αποθηκεύσω την εικόνα.");
+  }
+});
+
+$("removeInkBtn").addEventListener("click", ()=>{
+  setInkAttachment(null);
+  toast("Αφαιρέθηκε", "Το συνημμένο από τον Πίνακα Γραφής αφαιρέθηκε.");
+});
+
+/* =========================
+   Clear all
+========================= */
+$("clearAllBtn").addEventListener("click", ()=>{
+  mathInput.value = "";
+  $("verbalInput").value = "";
+  updateMathPreview();
+  setInkAttachment(null);
+  $("answerBox").textContent = "Η απάντηση θα εμφανιστεί εδώ…";
+  toast("Καθαρισμός", "Καθάρισαν τα πεδία.");
+});
+
+/* =========================
+   Ask AI (demo JSON to /ask)
+   If you want to send ink/photo as file -> backend must accept multipart.
+========================= */
+async function askAI(){
+  const payload = {
+    level,
+    math: (mathInput.value || "").trim(),
+    question: ($("verbalInput").value || "").trim(),
+    ink_png_base64: inkDataUrl ? inkDataUrl.split(",")[1] : null,
+  };
+
+  $("answerBox").textContent = "Στέλνω στο AI…";
+  try{
+    const res = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if(!res.ok){
+      const txt = await res.text().catch(()=> "");
+      throw new Error(`HTTP ${res.status}: ${txt.slice(0,200)}`);
+    }
+
+    const data = await res.json().catch(()=> ({}));
+    const answer = data.answer || data.response || data.text || JSON.stringify(data, null, 2);
+
+    $("answerBox").textContent = answer;
+    toast("Ολοκληρώθηκε", "Η απάντηση είναι πιο κάτω.");
+  }catch(err){
+    $("answerBox").textContent =
+      "Δεν μπόρεσα να πάρω απάντηση από το /ask.\n" +
+      "Αν ο UI δουλεύει, το θέμα είναι στο backend ή στο endpoint.\n\n" +
+      String(err);
+
+    toast("Πρόβλημα", "Δεν απάντησε το /ask (δες backend).");
+  }
+}
+$("askBtn").addEventListener("click", askAI);
+
+/* =========================
+   Photo demo buttons (UI only)
+========================= */
+$("removePhotoBtn").addEventListener("click", ()=>{
+  $("photoInput").value = "";
+  toast("ΟΚ", "Αφαιρέθηκε η φωτογραφία.");
+});
+$("checkPhotoBtn").addEventListener("click", ()=>{
+  toast("Σημείωση", "Το UI είναι έτοιμο. Για έλεγχο φωτογραφίας θέλει backend multipart.");
+});
+</script>
 </body>
 </html>
-
-
