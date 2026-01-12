@@ -130,7 +130,7 @@
       border:1px solid #e5e7eb; background:#fff; padding:6px 10px; border-radius:999px;
     }
 
-    /* ===== Ink Modal (SIMPLIFIED) ===== */
+    /* ===== Ink Modal ===== */
     .modal-backdrop{
       position:fixed; inset:0;
       background:rgba(15,23,42,.55);
@@ -141,7 +141,7 @@
     }
     .modal-backdrop.show{display:block;}
     .modal{
-      width:min(1100px, 96vw);
+      width:min(1200px, 96vw);
       margin:24px auto;
       background:#fff;
       border:1px solid #e5e7eb;
@@ -172,34 +172,30 @@
 
     .ink-split{
       display:grid;
-      gap:10px;
+      gap:12px;
       margin-top:10px;
     }
     @media(min-width:980px){
       .ink-split{ grid-template-columns:1fr 1fr; }
     }
 
-    .ink-panel{
+    .ink-pane{
       border:1px solid #e5e7eb;
       border-radius:16px;
       background:#fafafa;
       padding:10px;
     }
-    .ink-panel-title{
+    .ink-pane-title{
       font-weight:950;
-      font-size:.86rem;
+      font-size:.88rem;
       color:#0f172a;
-      margin:0 0 8px 0;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
+      margin-bottom:8px;
+      display:flex; align-items:center; gap:8px;
     }
 
     .ink-wrap{
       border:1px dashed #cbd5e1;border-radius:14px;background:#fff;
-      height:min(46vh, 420px);width:100%;overflow:hidden;position:relative;
+      height:min(52vh, 520px);width:100%;overflow:hidden;position:relative;
       touch-action:none;
     }
     canvas.ink-canvas{
@@ -207,19 +203,16 @@
       cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:none;
     }
 
-    .ink-panel-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-top:8px;
-      justify-content:flex-start;
+    .ink-actions{
+      display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+      margin-top:10px;
     }
+
     .ink-tip{font-size:.78rem;color:#475569;margin-top:8px}
 
     @media(max-width:650px){
       .modal{margin:10px auto;}
-      .ink-wrap{height:44vh;}
+      .ink-wrap{height:46vh;}
       .modal-title{font-size:14px;}
     }
 
@@ -296,7 +289,7 @@
 
       <div class="row">
         <button class="btn dark" id="open-ink-btn" type="button">✍️ Άνοιξε Πίνακα Γραφής (stylus)</button>
-        <span class="muted">Για iPad/Tablet: γράφεις μαθηματικά ή λεκτικά και τα περνάς στα πεδία.</span>
+        <span class="muted">Ιδανικό για tablet/iPad: γράφεις και το περνάς στα πεδία.</span>
       </div>
     </div>
   </div>
@@ -476,11 +469,11 @@
   <button id="toast-go" class="toast-btn" type="button">Δες την απάντηση</button>
 </div>
 
-<!-- ===== INK MODAL (TWO CANVAS) ===== -->
+<!-- ===== INK MODAL ===== -->
 <div id="ink-backdrop" class="modal-backdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-label="Πίνακας Γραφής">
     <div class="modal-head">
-      <div class="modal-title">✍️ Πίνακας Γραφής – γράψε (Μαθηματικά / Λεκτικά) και πέρασέ τα στα πεδία</div>
+      <div class="modal-title">✍️ Πίνακας Γραφής — γράψε (Μαθηματικά / Λεκτικά) και πέρασέ τα στα πεδία</div>
       <button class="modal-close" id="ink-close" type="button">Κλείσιμο ✕</button>
     </div>
 
@@ -499,40 +492,30 @@
       </div>
 
       <div class="ink-split">
-        <!-- ===== Math canvas ===== -->
-        <div class="ink-panel">
-          <div class="ink-panel-title">
-            <span>🧮 Γράψε ΜΑΘΗΜΑΤΙΚΗ έκφραση</span>
-          </div>
-
+        <!-- LEFT: MATH -->
+        <div class="ink-pane">
+          <div class="ink-pane-title">🧮 Γράψε ΜΑΘΗΜΑΤΙΚΗ έκφραση</div>
           <div class="ink-wrap">
             <canvas id="ink-math-canvas" class="ink-canvas"></canvas>
           </div>
-
-          <div class="ink-panel-actions">
+          <div class="ink-actions">
             <button class="btn primary" id="ink-math-to-main" type="button">➡️ Πέρασε στη Μαθηματική Έκφραση</button>
-            <button class="btn ghost" id="ink-math-clear" type="button">🔄 Καθάρισε</button>
+            <button class="btn ghost" id="ink-math-clear" type="button">🧼 Καθάρισε</button>
           </div>
-
           <div class="ink-tip">Tip: γράψε καθαρά (π.χ. κλάσματα σε “πάνω/κάτω”).</div>
         </div>
 
-        <!-- ===== Text canvas ===== -->
-        <div class="ink-panel">
-          <div class="ink-panel-title">
-            <span>💬 Γράψε ΛΕΚΤΙΚΗ απορία</span>
-          </div>
-
+        <!-- RIGHT: TEXT -->
+        <div class="ink-pane">
+          <div class="ink-pane-title">💬 Γράψε ΛΕΚΤΙΚΗ απορία</div>
           <div class="ink-wrap">
             <canvas id="ink-text-canvas" class="ink-canvas"></canvas>
           </div>
-
-          <div class="ink-panel-actions">
+          <div class="ink-actions">
             <button class="btn primary" id="ink-text-to-main" type="button">➡️ Πέρασε στη Λεκτική Απορία</button>
-            <button class="btn ghost" id="ink-text-clear" type="button">🔄 Καθάρισε</button>
+            <button class="btn ghost" id="ink-text-clear" type="button">🧼 Καθάρισε</button>
           </div>
-
-          <div class="ink-tip">Tip: γράψε μικρές προτάσεις/λέξεις (όχι τεράστια παράγραφο).</div>
+          <div class="ink-tip">Tip: γράψε μικρές προτάσεις/λέξεις (όχι τεράστιο παράγραφο).</div>
         </div>
       </div>
 
@@ -540,6 +523,7 @@
       <div class="muted">
         Πατάς “Πέρασε…” για αναγνώριση και μεταφορά. Μετά, πατάς <b>“Ρώτα το AI”</b> από την κύρια σελίδα.
       </div>
+      <div class="muted" id="ink-transfer-status" style="margin-top:8px;color:#0f172a;font-weight:800;"></div>
     </div>
   </div>
 </div>
@@ -615,6 +599,37 @@
     textInput.value = textInput.value.trim() + prefix + b;
   }
 
+  /* ===================== GREEK -> ENGLISH MATH NORMALIZER ===================== */
+  function greekToEnglishMath(s){
+    let t = (s || "").toString();
+
+    // normalize common greek variable χ -> x
+    t = t.replace(/χ/g, "x").replace(/Χ/g, "x");
+
+    // normalize greek minus and multiplication/division variants
+    t = t.replace(/−/g,'-').replace(/÷/g,'/').replace(/×/g,'*');
+
+    // Greek trig shortcuts (typical in Cyprus/GR)
+    // ημx -> sin x, συνx -> cos x, εφx -> tan x, σφx -> cot x
+    t = t.replace(/ημ\s*/g, "sin ");
+    t = t.replace(/συν\s*/g, "cos ");
+    t = t.replace(/εφ\s*/g, "tan ");
+    t = t.replace(/σφ\s*/g, "cot ");
+
+    // Sometimes people write "συνχ" etc without space: handle again
+    t = t.replace(/sinx/g, "sin x")
+         .replace(/cosx/g, "cos x")
+         .replace(/tanx/g, "tan x")
+         .replace(/cotx/g, "cot x");
+
+    // Greek pi
+    t = t.replace(/π/g, "\\pi ");
+
+    // Clean extra spaces
+    t = t.replace(/[ \t]+/g, " ").trim();
+    return t;
+  }
+
   /* ===================== KEYBOARD ===================== */
   const keyboardLayouts = {
     num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=',' ']],
@@ -664,57 +679,24 @@
   });
   loadKeyboard("num");
 
-  /* ===================== GREEK -> ENGLISH MATH ===================== */
-  function greekToEnglishMath(raw){
-    let s = (raw || "");
-
-    s = s.replace(/ά/g,'α').replace(/έ/g,'ε').replace(/ή/g,'η').replace(/ί/g,'ι')
-         .replace(/ό/g,'ο').replace(/ύ/g,'υ').replace(/ώ/g,'ω')
-         .replace(/Ά/g,'Α').replace(/Έ/g,'Ε').replace(/Ή/g,'Η').replace(/Ί/g,'Ι')
-         .replace(/Ό/g,'Ο').replace(/Ύ/g,'Υ').replace(/Ώ/g,'Ω');
-
-    s = s.replace(/\bημ\s*\(/g, "sin(");
-    s = s.replace(/\bημ(?=\s*[A-Za-z0-9π(\\])/g, "sin");
-
-    s = s.replace(/\bσυν\s*\(/g, "cos(");
-    s = s.replace(/\bσυν(?=\s*[A-Za-z0-9π(\\])/g, "cos");
-
-    s = s.replace(/\bεφ\s*\(/g, "tan(");
-    s = s.replace(/\bεφ(?=\s*[A-Za-z0-9π(\\])/g, "tan");
-
-    s = s.replace(/\bσυνεφ\s*\(/g, "cot(");
-    s = s.replace(/\bσυνεφ(?=\s*[A-Za-z0-9π(\\])/g, "cot");
-
-    s = s.replace(/\bλν\s*\(/g, "ln(");
-    s = s.replace(/\bλν(?=\s*[A-Za-z0-9(\\])/g, "ln");
-
-    s = s.replace(/\bλογ\s*\(/g, "log(");
-    s = s.replace(/\bλογ(?=\s*[A-Za-z0-9(\\])/g, "log");
-
-    s = s.replace(/\bριζα\s*\(/gi, "sqrt(");
-
-    return s;
-  }
-
   /* ===================== MATH PREVIEW ===================== */
   const mathPreview = document.getElementById("math-preview");
   const mathPreviewPlaceholder = document.getElementById("math-preview-placeholder");
 
-  function isProbablyLatex(s){ return /\\(frac|sqrt|int|sum|begin|pi|cdot|left|right|det)/.test(s || ""); }
+  function isProbablyLatex(s){ return /\\(frac|sqrt|int|sum|begin|pi|cdot|left|right|det|sin|cos|tan)/.test(s || ""); }
 
   function convertToLatex(text){
     let t = (text || "").trim();
     if (!t) return "";
-
-    t = greekToEnglishMath(t);
-
     const alreadyLatex = isProbablyLatex(t);
+
+    // run greek->english normalizer first (important for sin/cos)
+    t = greekToEnglishMath(t);
 
     t = t.replace(/−/g,'-').replace(/÷/g,'/').replace(/×/g,'*');
     t = t.replace(/([0-9a-zA-Z\)\}])\s*:\s*([0-9a-zA-Z\\(\{])/g, '$1/$2');
 
     if (!alreadyLatex){
-      t = t.replace(/π/g,'\\pi ');
       t = t.replace(/∫/g,'\\int ');
       t = t.replace(/\s*dx\b/g,'\\, dx');
 
@@ -731,6 +713,7 @@
       t = t.replace(/([0-9a-zA-Z]+)\s*\/\s*\(([^()]+)\)/g,'\\frac{$1}{$2}');
       t = t.replace(/([0-9a-zA-Z])\s*\/\s*([0-9a-zA-Z])(?!\s*\^)/g,'\\frac{$1}{$2}');
     }
+
     t = t.replace(/\*/g,'\\cdot ');
     return t;
   }
@@ -815,7 +798,10 @@
 
   document.getElementById("ask-btn").addEventListener("click", async () => {
     hideToast();
-    const math = mathInput.value.trim();
+
+    // normalize math before sending (Greek trig -> English)
+    const mathRaw = mathInput.value.trim();
+    const math = mathRaw ? greekToEnglishMath(mathRaw) : "";
     const text = textInput.value.trim();
 
     let bodyParts = [];
@@ -865,7 +851,7 @@
     setTimeout(() => showContinueBox(false), 800);
   });
 
-  /* ===================== ✅ SAVE / TXT / PDF / PRINT ===================== */
+  /* ===================== ✅ SAVE / TXT / PDF / PRINT (MathJax-safe) ===================== */
   const saveBtn = document.getElementById("save-answer-btn");
   const downloadBtn = document.getElementById("download-answer-btn");
   const pdfBtn = document.getElementById("pdf-answer-btn");
@@ -977,7 +963,14 @@
 
   <style>
     @page { margin: 12mm; }
-    body{ margin:0; font-family: system-ui,-apple-system,"Segoe UI",sans-serif; color:#111827; background:#fff; }
+    body{
+      margin:0;
+      font-family: system-ui,-apple-system,"Segoe UI",sans-serif;
+      color:#111827;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      background:#fff;
+    }
     .wrap{ max-width: 900px; margin: 0 auto; }
     .header{ border-bottom: 1px solid #e5e7eb; padding: 0 0 10px 0; margin: 0 0 12px 0; }
     h1{ margin:0 0 6px 0; font-size: 18px; font-weight: 900; letter-spacing:.2px; }
@@ -985,9 +978,16 @@
     .content{ font-size: 13px; line-height:1.6; }
     p{ margin: 0 0 10px 0; }
     .code{
-      border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; background: #fafafa;
-      overflow:auto; font-family: ui-monospace, Menlo, Consolas, "JetBrains Mono", monospace;
-      font-size: 12.5px; line-height: 1.5; margin: 0 0 12px 0; white-space: pre-wrap;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: #fafafa;
+      overflow:auto;
+      font-family: ui-monospace, Menlo, Consolas, "JetBrains Mono", monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      margin: 0 0 12px 0;
+      white-space: pre-wrap;
     }
     @media print{ .wrap{ max-width: none; } }
   </style>
@@ -1009,7 +1009,9 @@
   </div>
 
   <script>
-    function go(){ ${autoPrint ? "window.focus(); window.print();" : ""} }
+    function go(){
+      ${autoPrint ? "window.focus(); window.print();" : ""}
+    }
     window.addEventListener('load', () => setTimeout(go, 450));
   <\/script>
 </body>
@@ -1299,7 +1301,7 @@
   document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
   document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
 
-  /* ===================== INK (TWO CANVAS, NO ASK AI) ===================== */
+  /* ===================== INK (TWO CANVAS, TRANSFER TO FIELDS) ===================== */
   (function(){
     const $ = (id) => document.getElementById(id);
 
@@ -1319,8 +1321,16 @@
     const btnMathClear = $("ink-math-clear");
     const btnTextClear = $("ink-text-clear");
 
+    const inkTransferStatus = $("ink-transfer-status");
+
     let ctxMath = null;
     let ctxText = null;
+
+    function setInkMsg(msg="", ok=true){
+      if(!inkTransferStatus) return;
+      inkTransferStatus.textContent = msg;
+      inkTransferStatus.style.color = ok ? "#065f46" : "#991b1b";
+    }
 
     function setInkStyle(ctx){
       if(!ctx) return;
@@ -1355,6 +1365,7 @@
 
     function openInk(){
       if(!bd) return;
+      setInkMsg("");
       bd.classList.add("show");
       bd.setAttribute("aria-hidden","false");
       document.body.style.overflow = "hidden";
@@ -1397,6 +1408,7 @@
 
         drawing = true;
         setInkStyle(ctx);
+
         const p = getPos(canvas, ev);
         lastX = p.x; lastY = p.y;
 
@@ -1409,6 +1421,7 @@
         if(!ctx || !drawing || ev.pointerId !== activePointerId) return;
 
         const p = getPos(canvas, ev);
+
         const pressure = (typeof ev.pressure === "number" && ev.pressure > 0) ? ev.pressure : 0.5;
         const base = Number(sizeEl?.value || 4);
         ctx.lineWidth = base * (0.75 + pressure * 0.9);
@@ -1444,23 +1457,40 @@
     function cleanRecognitionText(txt){
       const t = (txt || "").replace(/\r/g,"").trim();
       if(!t) return "";
-      return t.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,6).join("\n");
+      return t.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,10).join("\n");
     }
 
-    async function recognizeMathFromCanvas(){
-      const blob = await canvasToBlob(cMath);
+    // append "δίπλα" (στην ουσία προσθέτει στο τέλος/στο cursor)
+    function appendAtCursor(el, text){
+      const toAdd = (text || "").trim();
+      if(!toAdd) return;
+
+      const start = el.selectionStart ?? el.value.length;
+      const end = el.selectionEnd ?? el.value.length;
+
+      const before = el.value.slice(0, start);
+      const after  = el.value.slice(end);
+
+      const needsNL = before && !before.endsWith("\n") && start === el.value.length;
+      const insert = (needsNL ? "\n" : "") + toAdd;
+
+      el.value = before + insert + after;
+      const caret = (before + insert).length;
+      el.setSelectionRange(caret, caret);
+    }
+
+    async function recognizeFromCanvas(canvas, kind){
+      const blob = await canvasToBlob(canvas);
       if(!blob) return "";
 
-      setStatus("Αναγνώριση μαθηματικής έκφρασης…");
+      setInkMsg(kind === "math" ? "⏳ Αναγνώριση μαθηματικών…" : "⏳ Αναγνώριση κειμένου…", true);
 
-      const prompt =
-        "Αναγνώρισε την ΜΑΘΗΜΑΤΙΚΗ ΕΚΦΡΑΣΗ που είναι γραμμένη στην εικόνα.\n" +
-        "ΕΠΙΣΤΡΕΨΕ ΜΟΝΟ την έκφραση σε απλό κείμενο (χωρίς εξηγήσεις).\n" +
-        "Αν υπάρχουν ελληνικές συντομογραφίες (ημ, συν, εφ, συνεφ, λν, λογ), κράτα τες όπως είναι.\n" +
-        "Μην γράψεις προτάσεις.";
+      const prompt = (kind === "math")
+        ? "Αναγνώρισε την ΜΑΘΗΜΑΤΙΚΗ ΕΚΦΡΑΣΗ που είναι γραμμένη στην εικόνα.\nΕΠΙΣΤΡΕΨΕ ΜΟΝΟ την έκφραση σε απλό κείμενο (χωρίς εξηγήσεις).\nΜην γράψεις προτάσεις."
+        : "Διάβασε το χειρόγραφο κείμενο στην εικόνα και επέστρεψε το ως απλό κείμενο.\nΕΠΙΣΤΡΕΨΕ ΜΟΝΟ το κείμενο (χωρίς σχόλια).\nΑν δεν φαίνεται τίποτα, επέστρεψε κενό.";
 
       const formData = new FormData();
-      formData.append("image", new File([blob], "ink_math.png", {type:"image/png"}));
+      formData.append("image", new File([blob], kind === "math" ? "ink_math.png" : "ink_text.png", {type:"image/png"}));
       formData.append("question", prompt);
       formData.append("level", currentLevel);
 
@@ -1469,38 +1499,8 @@
         const data = await res.json();
         return cleanRecognitionText(data.answer || "");
       }catch(e){
-        await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image) στην αναγνώριση μαθηματικών.");
+        setInkMsg("❌ Σφάλμα σύνδεσης (/check-image).", false);
         return "";
-      }finally{
-        setStatus("");
-      }
-    }
-
-    async function recognizeTextFromCanvas(){
-      const blob = await canvasToBlob(cText);
-      if(!blob) return "";
-
-      setStatus("Αναγνώριση λεκτικής απορίας…");
-
-      const prompt =
-        "Διάβασε το χειρόγραφο κείμενο στην εικόνα και επέστρεψε το ως απλό κείμενο.\n" +
-        "ΕΠΙΣΤΡΕΨΕ ΜΟΝΟ το κείμενο (χωρίς σχόλια, χωρίς bullet points).\n" +
-        "Αν δεν φαίνεται τίποτα, επέστρεψε κενό.";
-
-      const formData = new FormData();
-      formData.append("image", new File([blob], "ink_text.png", {type:"image/png"}));
-      formData.append("question", prompt);
-      formData.append("level", currentLevel);
-
-      try{
-        const res = await fetch(`${BASE_URL}/check-image`, { method:"POST", body: formData });
-        const data = await res.json();
-        return cleanRecognitionText(data.answer || "");
-      }catch(e){
-        await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image) στην αναγνώριση κειμένου.");
-        return "";
-      }finally{
-        setStatus("");
       }
     }
 
@@ -1525,32 +1525,41 @@
     sizeEl?.addEventListener("input", () => { setInkStyle(ctxMath); setInkStyle(ctxText); });
     colorEl?.addEventListener("input", () => { setInkStyle(ctxMath); setInkStyle(ctxText); });
 
-    btnMathClear?.addEventListener("click", () => clearCanvas(cMath, ctxMath));
-    btnTextClear?.addEventListener("click", () => clearCanvas(cText, ctxText));
+    btnMathClear?.addEventListener("click", () => { clearCanvas(cMath, ctxMath); setInkMsg(""); });
+    btnTextClear?.addEventListener("click", () => { clearCanvas(cText, ctxText); setInkMsg(""); });
 
     btnMathToMain?.addEventListener("click", async () => {
-      const recognized = await recognizeMathFromCanvas();
-      if(!recognized.trim()) return;
+      const recognized = (await recognizeFromCanvas(cMath, "math")).trim();
+      if(!recognized){
+        setInkMsg("❌ Δεν αναγνωρίστηκε τίποτα (γράψε πιο μεγάλα/καθαρά).", false);
+        return;
+      }
 
-      // Greek shortcuts -> English, then paste
       const finalText = greekToEnglishMath(recognized);
-      mathInput.value = finalText;
+
+      appendAtCursor(mathInput, finalText);
       await updateMathPreview();
+
+      setInkMsg("✅ Περάστηκε στη Μαθηματική Έκφραση.", true);
       closeInk();
       mathInput.focus();
     });
 
     btnTextToMain?.addEventListener("click", async () => {
-      const recognized = await recognizeTextFromCanvas();
-      if(!recognized.trim()) return;
+      const recognized = (await recognizeFromCanvas(cText, "text")).trim();
+      if(!recognized){
+        setInkMsg("❌ Δεν αναγνωρίστηκε τίποτα (γράψε πιο καθαρά).", false);
+        return;
+      }
 
       const prefix = textInput.value.trim() ? "\n\n" : "";
-      textInput.value = textInput.value.trim() + prefix + recognized;
+      textInput.value = textInput.value + prefix + recognized;
+
+      setInkMsg("✅ Περάστηκε στη Λεκτική Απορία.", true);
       closeInk();
       textInput.focus();
     });
 
-    // bind drawing
     bindDraw(cMath, () => ctxMath);
     bindDraw(cText, () => ctxText);
   })();
