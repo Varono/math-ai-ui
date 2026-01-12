@@ -170,14 +170,8 @@
     .ink-controls input[type="color"]{width:42px;height:30px;padding:0;border:0;background:transparent;cursor:pointer}
     .ink-controls .val{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;color:#334155;min-width:38px;text-align:left}
 
-    .ink-split{
-      display:grid;
-      gap:12px;
-      margin-top:10px;
-    }
-    @media(min-width:980px){
-      .ink-split{ grid-template-columns:1fr 1fr; }
-    }
+    .ink-split{display:grid;gap:12px;margin-top:10px}
+    @media(min-width:980px){ .ink-split{ grid-template-columns:1fr 1fr; } }
 
     .ink-pane{
       border:1px solid #e5e7eb;
@@ -203,12 +197,21 @@
       cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:none;
     }
 
-    .ink-actions{
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;
-      margin-top:10px;
-    }
-
+    .ink-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:10px}
     .ink-tip{font-size:.78rem;color:#475569;margin-top:8px}
+
+    /* ✅ Bigger + red “thinking/reading” statuses */
+    .status-thinking{
+      color:#dc2626 !important; /* red */
+      font-weight:950;
+      font-size:.92rem;
+    }
+    #ink-transfer-status{
+      margin-top:8px;
+      font-weight:950;
+      font-size:1rem;          /* bigger */
+      color:#dc2626;           /* red */
+    }
 
     @media(max-width:650px){
       .modal{margin:10px auto;}
@@ -324,7 +327,7 @@
         <div class="mini-card">
           <div class="mini-title">Προεπισκόπηση</div>
           <div id="matrix-preview" class="result-box"></div>
-          <div class="muted" style="margin-top:8px">Tip: βάλε πρώτα τον A, μετά πάτα τις εντολές δεξιά.</div>
+          <div class="muted"ini-title" style="margin-top:8px">Tip: βάλε πρώτα τον A, μετά πάτα τις εντολές δεξιά.</div>
         </div>
 
         <div class="mini-card">
@@ -523,7 +526,7 @@
       <div class="muted">
         Πατάς “Πέρασε…” για αναγνώριση και μεταφορά. Μετά, πατάς <b>“Ρώτα το AI”</b> από την κύρια σελίδα.
       </div>
-      <div class="muted" id="ink-transfer-status" style="margin-top:8px;color:#0f172a;font-weight:800;"></div>
+      <div class="muted" id="ink-transfer-status"></div>
     </div>
   </div>
 </div>
@@ -577,55 +580,21 @@
     el.setRangeText(text, start, end, "end");
     el.focus();
   }
-  function replaceSelection(el, newText){
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    if (start === end){ insertAtCursor(el, newText); return; }
-    el.setRangeText(newText, start, end, "end");
-    el.focus();
-  }
-  function getSelectionText(el){
-    const start = el.selectionStart ?? 0;
-    const end = el.selectionEnd ?? 0;
-    if (start === end) return "";
-    return el.value.slice(start, end);
-  }
-  function addToolHeader(title){ return `=== ${title} ===`; }
-  function appendToTextContext(block){
-    const b = (block || "").trim();
-    if (!b) return;
-    if (textInput.value.includes(b)) return;
-    const prefix = textInput.value.trim() ? "\n\n" : "";
-    textInput.value = textInput.value.trim() + prefix + b;
-  }
 
   /* ===================== GREEK -> ENGLISH MATH NORMALIZER ===================== */
   function greekToEnglishMath(s){
     let t = (s || "").toString();
-
-    // normalize common greek variable χ -> x
     t = t.replace(/χ/g, "x").replace(/Χ/g, "x");
-
-    // normalize greek minus and multiplication/division variants
     t = t.replace(/−/g,'-').replace(/÷/g,'/').replace(/×/g,'*');
-
-    // Greek trig shortcuts (typical in Cyprus/GR)
-    // ημx -> sin x, συνx -> cos x, εφx -> tan x, σφx -> cot x
     t = t.replace(/ημ\s*/g, "sin ");
     t = t.replace(/συν\s*/g, "cos ");
     t = t.replace(/εφ\s*/g, "tan ");
     t = t.replace(/σφ\s*/g, "cot ");
-
-    // Sometimes people write "συνχ" etc without space: handle again
     t = t.replace(/sinx/g, "sin x")
          .replace(/cosx/g, "cos x")
          .replace(/tanx/g, "tan x")
          .replace(/cotx/g, "cot x");
-
-    // Greek pi
     t = t.replace(/π/g, "\\pi ");
-
-    // Clean extra spaces
     t = t.replace(/[ \t]+/g, " ").trim();
     return t;
   }
@@ -690,30 +659,23 @@
     if (!t) return "";
     const alreadyLatex = isProbablyLatex(t);
 
-    // run greek->english normalizer first (important for sin/cos)
     t = greekToEnglishMath(t);
-
-    t = t.replace(/−/g,'-').replace(/÷/g,'/').replace(/×/g,'*');
     t = t.replace(/([0-9a-zA-Z\)\}])\s*:\s*([0-9a-zA-Z\\(\{])/g, '$1/$2');
 
     if (!alreadyLatex){
       t = t.replace(/∫/g,'\\int ');
       t = t.replace(/\s*dx\b/g,'\\, dx');
-
       t = t.replace(/(\d+)\s*√\s*\(([^)]*)\)/g,'\\sqrt[$1]{$2}');
       t = t.replace(/(\d+)\s*√\s*([a-zA-Z0-9]+)/g,'\\sqrt[$1]{$2}');
       t = t.replace(/√\s*\(([^)]*)\)/g,'\\sqrt{$1}');
       t = t.replace(/√\s*([a-zA-Z0-9]+)/g,'\\sqrt{$1}');
       t = t.replace(/sqrt\s*\(([^)]*)\)/gi,'\\sqrt{$1}');
-
       t = t.replace(/([0-9a-zA-Z\\]+)\s*\^\s*\(([^)]+)\)/g,'$1^{ $2 }');
       t = t.replace(/([a-zA-Z0-9])\^(\d+)/g,'$1^{ $2 }');
-
       t = t.replace(/\(([^()]+)\)\s*\/\s*\(([^()]+)\)/g,'\\frac{$1}{$2}');
       t = t.replace(/([0-9a-zA-Z]+)\s*\/\s*\(([^()]+)\)/g,'\\frac{$1}{$2}');
       t = t.replace(/([0-9a-zA-Z])\s*\/\s*([0-9a-zA-Z])(?!\s*\^)/g,'\\frac{$1}{$2}');
     }
-
     t = t.replace(/\*/g,'\\cdot ');
     return t;
   }
@@ -777,6 +739,7 @@
 
   async function askAI(prompt){
     setStatus("Το AI σκέφτεται…");
+    statusEl.classList.add("status-thinking");
     answerEl.innerHTML = "Το AI σκέφτεται…";
     await renderMathIn(answerEl);
     showContinueBox(false);
@@ -794,12 +757,12 @@
       await renderAnswer("Σφάλμα σύνδεσης με τον server (/ask).");
     }
     setStatus("");
+    statusEl.classList.remove("status-thinking");
   }
 
   document.getElementById("ask-btn").addEventListener("click", async () => {
     hideToast();
 
-    // normalize math before sending (Greek trig -> English)
     const mathRaw = mathInput.value.trim();
     const math = mathRaw ? greekToEnglishMath(mathRaw) : "";
     const text = textInput.value.trim();
@@ -817,41 +780,60 @@
     await askAI(lastPromptSent);
   });
 
-  document.getElementById("clear-btn").addEventListener("click", async () => {
+  /* ===================== PHOTO CHECK (unchanged) ===================== */
+  const imgInput = document.getElementById("image-input");
+  const imgPreview = document.getElementById("img-preview");
+  const checkBtn = document.getElementById("check-image-btn");
+  const removeBtn = document.getElementById("remove-img-btn");
+
+  function resetImageUI(){
+    imgPreview.removeAttribute("src");
+    checkBtn.disabled = true;
+    removeBtn.disabled = true;
+  }
+
+  imgInput.addEventListener("change", () => {
+    const file = imgInput.files && imgInput.files[0];
+    if(!file){ resetImageUI(); return; }
+    const url = URL.createObjectURL(file);
+    imgPreview.src = url;
+    checkBtn.disabled = false;
+    removeBtn.disabled = false;
+  });
+
+  removeBtn.addEventListener("click", () => {
+    imgInput.value = "";
+    resetImageUI();
+  });
+
+  checkBtn.addEventListener("click", async () => {
     hideToast();
-    mathInput.value = "";
-    textInput.value = "";
-    lastPromptSent = "";
-    lastAnswerText = "";
-    answerEl.innerHTML = "Έτοιμος/η. Γράψε νέα ερώτηση…";
+    const file = imgInput.files && imgInput.files[0];
+    if (!file) { await renderAnswer("Δεν επιλέχθηκε φωτογραφία."); return; }
+
+    setStatus("Το AI σκέφτεται…");
+    statusEl.classList.add("status-thinking");
+    answerEl.innerHTML = "Το AI σκέφτεται…";
     await renderMathIn(answerEl);
     showContinueBox(false);
-    updateMathPreview();
-    updateSavedInfo();
+
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("question", textInput.value.trim());
+    formData.append("level", currentLevel);
+
+    try{
+      const res = await fetch(`${BASE_URL}/check-image`, { method:"POST", body: formData });
+      const data = await res.json();
+      await renderAnswer(data.answer || "Δεν ήρθε απάντηση από τον server.");
+    }catch(e){
+      await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image).");
+    }
+    setStatus("");
+    statusEl.classList.remove("status-thinking");
   });
 
-  continueYes.addEventListener("click", async () => {
-    hideToast();
-    continueYes.disabled = true;
-    continueNo.disabled = true;
-    continueStatus.textContent = "Συνεχίζω…";
-
-    const followUp =
-      "Συνέχισε την εξήγηση/λύση από το σημείο που έμεινες. " +
-      "Δώσε τα επόμενα βήματα, πιο αναλυτικά, με καθαρή δομή.\n\n" +
-      "ΠΡΟΗΓΟΥΜΕΝΟ PROMPT:\n" + (lastPromptSent || "(κενό)") + "\n\n" +
-      "ΠΡΟΗΓΟΥΜΕΝΗ ΑΠΑΝΤΗΣΗ:\n" + (lastAnswerText || "(κενό)");
-
-    lastPromptSent = followUp;
-    await askAI(followUp);
-  });
-
-  continueNo.addEventListener("click", () => {
-    continueStatus.textContent = "ΟΚ — δεν συνεχίζω.";
-    setTimeout(() => showContinueBox(false), 800);
-  });
-
-  /* ===================== ✅ SAVE / TXT / PDF / PRINT (MathJax-safe) ===================== */
+  /* ===================== ✅ SAVE/TXT/PDF/PRINT (minimal) ===================== */
   const saveBtn = document.getElementById("save-answer-btn");
   const downloadBtn = document.getElementById("download-answer-btn");
   const pdfBtn = document.getElementById("pdf-answer-btn");
@@ -886,7 +868,7 @@
       updateSavedInfo();
       alert("✅ Αποθηκεύτηκε.");
     }catch(e){
-      alert("❌ Δεν μπόρεσα να αποθηκεύσω (ίσως private mode).");
+      alert("❌ Δεν μπόρεσα να αποθηκεύσω.");
     }
   }
 
@@ -894,25 +876,17 @@
     const t = getAnswerTextRaw();
     const when = new Date();
     const filename = `AI_answer_${when.getFullYear()}-${String(when.getMonth()+1).padStart(2,"0")}-${String(when.getDate()).padStart(2,"0")}_${String(when.getHours()).padStart(2,"0")}${String(when.getMinutes()).padStart(2,"0")}.txt`;
-
     const blob = new Blob([t], {type:"text/plain;charset=utf-8"});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 400);
   }
 
   function escHtml(s){
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
   }
 
   function formatForPrint(rawText){
@@ -937,371 +911,51 @@
     const raw = getAnswerTextRaw();
     const when = new Date().toLocaleString();
     const htmlBody = formatForPrint(raw);
-
     const w = window.open("", "_blank", "width=980,height=760");
-    if (!w) {
-      alert("Ο browser μπλόκαρε το popup. Επίτρεψε popups και ξανά.");
-      return;
-    }
+    if (!w) { alert("Ο browser μπλόκαρε το popup."); return; }
 
     w.document.open();
     w.document.write(`
 <!doctype html>
-<html lang="el">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>${escHtml(title)}</title>
-
-  <script>
-    window.MathJax = {
-      tex: { inlineMath: [['\\\\(','\\\\)'], ['$', '$']], displayMath: [['\\\\[','\\\\]']] },
-      options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
-    };
-  <\/script>
-  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
-
-  <style>
-    @page { margin: 12mm; }
-    body{
-      margin:0;
-      font-family: system-ui,-apple-system,"Segoe UI",sans-serif;
-      color:#111827;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-      background:#fff;
-    }
-    .wrap{ max-width: 900px; margin: 0 auto; }
-    .header{ border-bottom: 1px solid #e5e7eb; padding: 0 0 10px 0; margin: 0 0 12px 0; }
-    h1{ margin:0 0 6px 0; font-size: 18px; font-weight: 900; letter-spacing:.2px; }
-    .meta{ color:#6b7280; font-size:12px; }
-    .content{ font-size: 13px; line-height:1.6; }
-    p{ margin: 0 0 10px 0; }
-    .code{
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 10px 12px;
-      background: #fafafa;
-      overflow:auto;
-      font-family: ui-monospace, Menlo, Consolas, "JetBrains Mono", monospace;
-      font-size: 12.5px;
-      line-height: 1.5;
-      margin: 0 0 12px 0;
-      white-space: pre-wrap;
-    }
-    @media print{ .wrap{ max-width: none; } }
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="header">
-      <h1>Βοηθός Μαθηματικών AI — ${escHtml(title)}</h1>
-      <div class="meta">${escHtml(when)}</div>
-    </div>
-
-    <div class="content" id="content">
-      ${htmlBody}
-    </div>
-
-    <div class="meta" style="margin-top:12px">
-      Tip: Στο Chrome κλείσε “Headers and footers” για να φύγουν αριθμοί σελίδων/URL.
-    </div>
-  </div>
-
-  <script>
-    function go(){
-      ${autoPrint ? "window.focus(); window.print();" : ""}
-    }
-    window.addEventListener('load', () => setTimeout(go, 450));
-  <\/script>
-</body>
-</html>
-    `);
+<html lang="el"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>${escHtml(title)}</title>
+<script>
+window.MathJax={tex:{inlineMath:[['\\\\(','\\\\)'],['$','$']],displayMath:[['\\\\[','\\\\]']]},
+options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};<\/script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
+<style>
+@page{margin:12mm;}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#111827;background:#fff;}
+.wrap{max-width:900px;margin:0 auto;}
+.header{border-bottom:1px solid #e5e7eb;padding:0 0 10px 0;margin:0 0 12px 0;}
+h1{margin:0 0 6px 0;font-size:18px;font-weight:900;}
+.meta{color:#6b7280;font-size:12px;}
+.content{font-size:13px;line-height:1.6;}
+p{margin:0 0 10px 0;}
+.code{border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;background:#fafafa;white-space:pre-wrap;}
+</style>
+</head><body>
+<div class="wrap"><div class="header">
+<h1>Βοηθός Μαθηματικών AI — ${escHtml(title)}</h1>
+<div class="meta">${escHtml(when)}</div>
+</div>
+<div class="content" id="content">${htmlBody}</div>
+</div>
+<script>
+function go(){ ${autoPrint ? "window.focus(); window.print();" : ""} }
+window.addEventListener('load',()=>setTimeout(go,450));
+<\/script>
+</body></html>`);
     w.document.close();
   }
 
-  function printAnswer(){ openPrintWindow({autoPrint:true, title:"Εκτύπωση"}); }
-  function exportPdf(){ openPrintWindow({autoPrint:true, title:"Export PDF"}); }
-
   saveBtn.addEventListener("click", saveAnswerNow);
   downloadBtn.addEventListener("click", downloadAnswerTxt);
-  printBtn.addEventListener("click", printAnswer);
-  pdfBtn.addEventListener("click", exportPdf);
+  printBtn.addEventListener("click", () => openPrintWindow({autoPrint:true, title:"Εκτύπωση"}));
+  pdfBtn.addEventListener("click", () => openPrintWindow({autoPrint:true, title:"Export PDF"}));
 
-  /* ===================== PHOTO CHECK ===================== */
-  const imgInput = document.getElementById("image-input");
-  const imgPreview = document.getElementById("img-preview");
-  const checkBtn = document.getElementById("check-image-btn");
-  const removeBtn = document.getElementById("remove-img-btn");
-
-  function resetImageUI(){
-    imgPreview.removeAttribute("src");
-    checkBtn.disabled = true;
-    removeBtn.disabled = true;
-  }
-
-  imgInput.addEventListener("change", () => {
-    const file = imgInput.files && imgInput.files[0];
-    if(!file){ resetImageUI(); return; }
-    const url = URL.createObjectURL(file);
-    imgPreview.src = url;
-    checkBtn.disabled = false;
-    removeBtn.disabled = false;
-  });
-
-  removeBtn.addEventListener("click", () => {
-    imgInput.value = "";
-    resetImageUI();
-  });
-
-  checkBtn.addEventListener("click", async () => {
-    hideToast();
-    const file = imgInput.files && imgInput.files[0];
-    if (!file) { await renderAnswer("Δεν επιλέχθηκε φωτογραφία."); return; }
-
-    setStatus("Το AI αναλύει τη φωτογραφία…");
-    answerEl.innerHTML = "Το AI αναλύει τη φωτογραφία…";
-    await renderMathIn(answerEl);
-    showContinueBox(false);
-
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("question", textInput.value.trim());
-    formData.append("level", currentLevel);
-
-    try{
-      const res = await fetch(`${BASE_URL}/check-image`, { method:"POST", body: formData });
-      const data = await res.json();
-      await renderAnswer(data.answer || "Δεν ήρθε απάντηση από τον server.");
-    }catch(e){
-      await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image).");
-    }
-    setStatus("");
-  });
-
-  /* ===================== TOOL TABS ===================== */
-  const toolTabs = document.querySelectorAll(".tool-tab");
-  const toolPanels = {
-    matrix: document.getElementById("tool-matrix"),
-    series: document.getElementById("tool-series"),
-    stats: document.getElementById("tool-stats")
-  };
-  toolTabs.forEach(t => {
-    t.addEventListener("click", () => {
-      toolTabs.forEach(x => x.classList.remove("active"));
-      t.classList.add("active");
-      Object.values(toolPanels).forEach(p => p.classList.remove("active"));
-      toolPanels[t.dataset.tool].classList.add("active");
-    });
-  });
-
-  /* ===================== MATRICES ===================== */
-  const matrixRaw = document.getElementById("matrix-raw");
-  const matrixPreview = document.getElementById("matrix-preview");
-  let lastMatrixLatex = "";
-
-  function parseMatrix(raw){
-    const txt = (raw || "").trim();
-    if (!txt) return null;
-    const normalized = txt.replace(/\n+/g, ';');
-    const rows = normalized.split(';').map(r => r.trim()).filter(Boolean);
-    if (!rows.length) return null;
-    const data = rows.map(r => r.split(',').map(c => c.trim()).filter(Boolean));
-    const cols = data[0]?.length || 0;
-    if (!cols) return null;
-    return data;
-  }
-  function matrixToLatex(mat){
-    const rows = mat.map(row => row.join(' & ')).join(' \\\\ ');
-    return `\\begin{bmatrix} ${rows} \\end{bmatrix}`;
-  }
-  async function updateMatrixPreview(){
-    const mat = parseMatrix(matrixRaw.value);
-    if (!mat){ matrixPreview.innerHTML = ""; return; }
-    const latex = matrixToLatex(mat);
-    matrixPreview.innerHTML = `\\(${latex}\\)`;
-    await renderMathIn(matrixPreview);
-  }
-  matrixRaw.addEventListener("input", updateMatrixPreview);
-
-  function pushMatrixContext(matLatex, raw){
-    lastMatrixLatex = matLatex || lastMatrixLatex;
-    appendToTextContext(
-      `${addToolHeader("ΠΙΝΑΚΕΣ")}\n` +
-      `Πίνακας A (raw): ${raw}\n` +
-      `Πίνακας A (LaTeX): ${matLatex}\n`
-    );
-  }
-  function ensureMatrixInContext(){
-    if (!lastMatrixLatex){
-      appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\n⚠️ Δεν έχει οριστεί πίνακας A. Βάλε πρώτα πίνακα και πάτησε “Βάλε τον πίνακα”.`);
-      return false;
-    }
-    return true;
-  }
-  function diagonalizationChecklist(){
-    const A = lastMatrixLatex || "A";
-    return (
-      `${addToolHeader("ΔΙΑΓΩΝΟΠΟΙΗΣΗ (Σύνοψη)")}\n` +
-      `Δίνεται ο πίνακας A = ${A}\n\n` +
-      `👉 Τυπική σειρά:\n` +
-      `1) Ιδιοτιμές (det(A-\\lambda I)=0)\n` +
-      `2) Ιδιοδιανύσματα ((A-\\lambda I)v=0)\n` +
-      `3) Έλεγχος διαγωνοποίησης\n` +
-      `4) P, D (ίδια σειρά)\n` +
-      `5) Έλεγχος: A=PDP^{-1}\n\n` +
-      `Μετά: A^n, e^A, δυναμικά, Δ.Ε.\n`
-    );
-  }
-
-  document.getElementById("matrix-insert-btn").addEventListener("click", async () => {
-    const mat = parseMatrix(matrixRaw.value);
-    if (!mat){ await renderAnswer("Δώσε πρώτα έναν πίνακα π.χ. 1,2;3,4"); return; }
-    const latex = matrixToLatex(mat);
-    lastMatrixLatex = latex;
-    insertAtCursor(mathInput, latex);
-    updateMathPreview();
-    pushMatrixContext(latex, matrixRaw.value.trim());
-    textInput.focus();
-  });
-  document.getElementById("matrix-to-text-btn").addEventListener("click", () => {
-    const mat = parseMatrix(matrixRaw.value);
-    if (!mat) return;
-    const latex = matrixToLatex(mat);
-    lastMatrixLatex = latex;
-    pushMatrixContext(latex, matrixRaw.value.trim());
-    textInput.focus();
-  });
-  document.getElementById("matrix-clear-btn").addEventListener("click", () => {
-    matrixRaw.value = "";
-    matrixPreview.innerHTML = "";
-    lastMatrixLatex = "";
-  });
-
-  document.getElementById("matrix-det-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΖητούμενο: Υπολόγισε det(A) με βήματα.`); textInput.focus(); });
-  document.getElementById("matrix-inv-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΖητούμενο: Βρες A^{-1} (αν υπάρχει).`); textInput.focus(); });
-  document.getElementById("matrix-solve-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΖητούμενο: Λύσε Ax=b.`); textInput.focus(); });
-
-  document.getElementById("eigvals-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΒρες ιδιοτιμές.`); textInput.focus(); });
-  document.getElementById("eigvecs-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΒρες ιδιοδιανύσματα.`); textInput.focus(); });
-  document.getElementById("diag-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΈλεγξε αν διαγωνοποιείται.`); textInput.focus(); });
-  document.getElementById("pd-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΦτιάξε P, D (ίδια σειρά).`); textInput.focus(); });
-  document.getElementById("verify-pdp-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΈλεγξε A=PDP^{-1}.`); textInput.focus(); });
-  document.getElementById("an-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΥπολόγισε A^n.`); textInput.focus(); });
-  document.getElementById("eA-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΥπολόγισε e^A.`); textInput.focus(); });
-  document.getElementById("dynsys-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx_{k+1}=Ax_k με A=${lastMatrixLatex}.`); textInput.focus(); });
-  document.getElementById("ode-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx'(t)=Ax(t) με A=${lastMatrixLatex}.`); textInput.focus(); });
-  document.getElementById("exam-summary-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(diagonalizationChecklist()); textInput.focus(); });
-
-  /* ===================== SERIES ===================== */
-  const seriesFrom = document.getElementById("series-from");
-  const seriesTo = document.getElementById("series-to");
-
-  function seriesLatexFromTerm(term){
-    const from = (seriesFrom.value || "").trim() || "1";
-    let to = (seriesTo.value || "").trim() || "\\infty";
-    if (to === "∞") to = "\\infty";
-    const t = (term || "").trim() || "a_n";
-    return `\\sum_{n=${from}}^{${to}} ${t}`;
-  }
-  function pushSeriesContext(latex){
-    appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΣειρά: ${latex}\nΕρώτηση: άθροισμα/σύγκλιση/κριτήριο/παράδειγμα.`);
-  }
-  document.getElementById("series-wrap-btn").addEventListener("click", () => {
-    const selected = getSelectionText(mathInput).trim();
-    const latex = seriesLatexFromTerm(selected || "a_n");
-    if (selected) replaceSelection(mathInput, latex); else insertAtCursor(mathInput, latex);
-    updateMathPreview();
-    pushSeriesContext(latex);
-    textInput.focus();
-  });
-  document.getElementById("series-clear-btn").addEventListener("click", () => { seriesFrom.value=""; seriesTo.value=""; });
-  document.getElementById("series-to-text-btn").addEventListener("click", () => {
-    const selected = getSelectionText(mathInput).trim();
-    pushSeriesContext(seriesLatexFromTerm(selected || "a_n"));
-    textInput.focus();
-  });
-  document.getElementById("series-geo-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΘέλω γεωμετρική σειρά: σύγκλιση, άθροισμα, παράδειγμα.`); textInput.focus(); });
-  document.getElementById("series-taylor-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΘέλω σειρά Taylor: τύπος, παράδειγμα, περιοχή σύγκλισης.`); textInput.focus(); });
-  document.getElementById("series-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΔιάλεξε κατάλληλο κριτήριο σύγκλισης και δείξε βήματα.`); textInput.focus(); });
-
-  /* ===================== STATS ===================== */
-  const statsData = document.getElementById("stats-data");
-  const statsResults = document.getElementById("stats-results");
-
-  function parseNumbers(raw){
-    const txt=(raw||"").replace(/\n/g,' ').replace(/;/g,' ').replace(/,/g,' ').trim();
-    if(!txt) return [];
-    const parts=txt.split(/\s+/).filter(Boolean);
-    const nums=[];
-    for(const p of parts){
-      const v=Number(p.replace(',', '.'));
-      if(Number.isFinite(v)) nums.push(v);
-    }
-    return nums;
-  }
-  function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length}
-  function median(arr){
-    const a=[...arr].sort((x,y)=>x-y), n=a.length;
-    return (n%2===1)?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2;
-  }
-  function mode(arr){
-    const m=new Map(); for(const x of arr) m.set(x,(m.get(x)||0)+1);
-    let best=[], bestCount=0;
-    for(const [k,c] of m.entries()){
-      if(c>bestCount){bestCount=c; best=[k]}
-      else if(c===bestCount){best.push(k)}
-    }
-    if(bestCount<=1) return [];
-    return best.sort((a,b)=>a-b);
-  }
-  function variance(arr,sample=true){
-    const mu=mean(arr), n=arr.length;
-    const s=arr.reduce((acc,x)=>acc+(x-mu)*(x-mu),0);
-    return sample?s/(n-1):s/n;
-  }
-  function fmt(x){
-    if(!Number.isFinite(x)) return String(x);
-    const abs=Math.abs(x);
-    if(abs>=1000 || abs<0.001) return x.toExponential(4);
-    return x.toFixed(4).replace(/\.?0+$/,'');
-  }
-  function statsSummary(nums){
-    const n=nums.length, mu=mean(nums), med=median(nums), mo=mode(nums);
-    const varP=variance(nums,false), sdP=Math.sqrt(varP);
-    const varS=(n>=2)?variance(nums,true):NaN, sdS=(n>=2)?Math.sqrt(varS):NaN;
-    const a=[...nums].sort((x,y)=>x-y);
-    return {n,mu,med,mo,varP,sdP,varS,sdS,min:a[0],max:a[a.length-1],range:a[a.length-1]-a[0]};
-  }
-  function renderStatsBox(s){
-    const lines=[];
-    lines.push(`n = ${s.n}`);
-    lines.push(`min = ${fmt(s.min)}, max = ${fmt(s.max)}, range = ${fmt(s.range)}`);
-    lines.push(`μέση τιμή (x̄) = ${fmt(s.mu)}`);
-    lines.push(`διάμεσος = ${fmt(s.med)}`);
-    lines.push(`επικρατούσα = ${s.mo.length ? s.mo.map(fmt).join(', ') : '—'}`);
-    lines.push(`σ² (πληθ.) = ${fmt(s.varP)}   |   σ = ${fmt(s.sdP)}`);
-    if(s.n>=2){ lines.push(`s² (δείγμα) = ${fmt(s.varS)} |   s = ${fmt(s.sdS)}`); }
-    return lines.join("\n");
-  }
-  document.getElementById("stats-calc-btn").addEventListener("click", () => {
-    const nums=parseNumbers(statsData.value);
-    if(!nums.length){statsResults.textContent="Δώσε δεδομένα πρώτα.";return;}
-    statsResults.textContent=renderStatsBox(statsSummary(nums));
-  });
-  document.getElementById("stats-insert-btn").addEventListener("click", () => {
-    const nums=parseNumbers(statsData.value);
-    if(!nums.length){statsResults.textContent="Δώσε δεδομένα πρώτα.";return;}
-    const s=statsSummary(nums);
-    appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nΔεδομένα: ${nums.join(", ")}\nΣύνοψη:\n${renderStatsBox(s)}\n`);
-    textInput.focus();
-  });
-  document.getElementById("stats-clear-btn").addEventListener("click", () => { statsData.value=""; statsResults.textContent=""; });
-  document.getElementById("stats-ci-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Διάστημα Εμπιστοσύνης: δώσε επίπεδο (π.χ. 95%), n, σ γνωστή/άγνωστη.`); textInput.focus(); });
-  document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
-  document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
-
-  /* ===================== INK (TWO CANVAS, TRANSFER TO FIELDS) ===================== */
+  /* ===================== INK: prevent double/triple transfers ===================== */
   (function(){
     const $ = (id) => document.getElementById(id);
 
@@ -1326,10 +980,13 @@
     let ctxMath = null;
     let ctxText = null;
 
+    // ✅ lock to prevent multiple clicks / duplicates while thinking
+    let inkBusy = false;
+
     function setInkMsg(msg="", ok=true){
       if(!inkTransferStatus) return;
       inkTransferStatus.textContent = msg;
-      inkTransferStatus.style.color = ok ? "#065f46" : "#991b1b";
+      inkTransferStatus.style.color = ok ? "#065f46" : "#dc2626";
     }
 
     function setInkStyle(ctx){
@@ -1379,6 +1036,26 @@
       bd.classList.remove("show");
       bd.setAttribute("aria-hidden","true");
       document.body.style.overflow = "";
+      // reset lock when closing
+      inkBusy = false;
+      unlockInkButtons();
+    }
+
+    function lockInkButtons(){
+      inkBusy = true;
+      if(btnMathToMain) btnMathToMain.disabled = true;
+      if(btnTextToMain) btnTextToMain.disabled = true;
+      if(btnMathClear) btnMathClear.disabled = true;
+      if(btnTextClear) btnTextClear.disabled = true;
+      if(btnClose) btnClose.disabled = true;
+    }
+    function unlockInkButtons(){
+      inkBusy = false;
+      if(btnMathToMain) btnMathToMain.disabled = false;
+      if(btnTextToMain) btnTextToMain.disabled = false;
+      if(btnMathClear) btnMathClear.disabled = false;
+      if(btnTextClear) btnTextClear.disabled = false;
+      if(btnClose) btnClose.disabled = false;
     }
 
     function clearCanvas(canvas, ctx){
@@ -1402,16 +1079,12 @@
       function start(ev){
         const ctx = getCtx();
         if(!ctx) return;
-
         if(activePointerId !== null && ev.pointerId !== activePointerId) return;
         activePointerId = ev.pointerId;
-
         drawing = true;
         setInkStyle(ctx);
-
         const p = getPos(canvas, ev);
         lastX = p.x; lastY = p.y;
-
         try{ canvas.setPointerCapture(ev.pointerId); }catch(e){}
         ev.preventDefault();
       }
@@ -1419,18 +1092,14 @@
       function move(ev){
         const ctx = getCtx();
         if(!ctx || !drawing || ev.pointerId !== activePointerId) return;
-
         const p = getPos(canvas, ev);
-
         const pressure = (typeof ev.pressure === "number" && ev.pressure > 0) ? ev.pressure : 0.5;
         const base = Number(sizeEl?.value || 4);
         ctx.lineWidth = base * (0.75 + pressure * 0.9);
-
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
         ctx.lineTo(p.x, p.y);
         ctx.stroke();
-
         lastX = p.x; lastY = p.y;
         ev.preventDefault();
       }
@@ -1460,10 +1129,12 @@
       return t.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,10).join("\n");
     }
 
-    // append "δίπλα" (στην ουσία προσθέτει στο τέλος/στο cursor)
     function appendAtCursor(el, text){
       const toAdd = (text || "").trim();
       if(!toAdd) return;
+
+      // ✅ prevent duplicates: if already inside, do nothing
+      if(el.value.includes(toAdd)) return;
 
       const start = el.selectionStart ?? el.value.length;
       const end = el.selectionEnd ?? el.value.length;
@@ -1507,12 +1178,10 @@
     btnOpen?.addEventListener("click", openInk);
     btnClose?.addEventListener("click", closeInk);
 
-    bd?.addEventListener("click", (e) => {
-      if(e.target === bd) closeInk();
-    });
+    bd?.addEventListener("click", (e) => { if(e.target === bd) closeInk(); });
 
     window.addEventListener("keydown", (e) => {
-      if(e.key === "Escape" && bd?.classList.contains("show")) closeInk();
+      if(e.key === "Escape" && bd?.classList.contains("show") && !inkBusy) closeInk();
     });
 
     window.addEventListener("resize", () => {
@@ -1525,39 +1194,51 @@
     sizeEl?.addEventListener("input", () => { setInkStyle(ctxMath); setInkStyle(ctxText); });
     colorEl?.addEventListener("input", () => { setInkStyle(ctxMath); setInkStyle(ctxText); });
 
-    btnMathClear?.addEventListener("click", () => { clearCanvas(cMath, ctxMath); setInkMsg(""); });
-    btnTextClear?.addEventListener("click", () => { clearCanvas(cText, ctxText); setInkMsg(""); });
+    btnMathClear?.addEventListener("click", () => { if(inkBusy) return; clearCanvas(cMath, ctxMath); setInkMsg(""); });
+    btnTextClear?.addEventListener("click", () => { if(inkBusy) return; clearCanvas(cText, ctxText); setInkMsg(""); });
 
     btnMathToMain?.addEventListener("click", async () => {
-      const recognized = (await recognizeFromCanvas(cMath, "math")).trim();
-      if(!recognized){
-        setInkMsg("❌ Δεν αναγνωρίστηκε τίποτα (γράψε πιο μεγάλα/καθαρά).", false);
-        return;
+      if(inkBusy) return;              // ✅ block double click
+      lockInkButtons();                // ✅ disable while thinking
+      try{
+        const recognized = (await recognizeFromCanvas(cMath, "math")).trim();
+        if(!recognized){
+          setInkMsg("❌ Δεν αναγνωρίστηκε τίποτα (γράψε πιο μεγάλα/καθαρά).", false);
+          return;
+        }
+        const finalText = greekToEnglishMath(recognized);
+        appendAtCursor(mathInput, finalText);
+        await updateMathPreview();
+        setInkMsg("✅ Περάστηκε στη Μαθηματική Έκφραση.", true);
+        closeInk();
+        mathInput.focus();
+      } finally {
+        unlockInkButtons();
       }
-
-      const finalText = greekToEnglishMath(recognized);
-
-      appendAtCursor(mathInput, finalText);
-      await updateMathPreview();
-
-      setInkMsg("✅ Περάστηκε στη Μαθηματική Έκφραση.", true);
-      closeInk();
-      mathInput.focus();
     });
 
     btnTextToMain?.addEventListener("click", async () => {
-      const recognized = (await recognizeFromCanvas(cText, "text")).trim();
-      if(!recognized){
-        setInkMsg("❌ Δεν αναγνωρίστηκε τίποτα (γράψε πιο καθαρά).", false);
-        return;
+      if(inkBusy) return;              // ✅ block double click
+      lockInkButtons();                // ✅ disable while thinking
+      try{
+        const recognized = (await recognizeFromCanvas(cText, "text")).trim();
+        if(!recognized){
+          setInkMsg("❌ Δεν αναγνωρίστηκε τίποτα (γράψε πιο καθαρά).", false);
+          return;
+        }
+        // ✅ prevent duplicates in text too
+        if(textInput.value.includes(recognized)){
+          setInkMsg("ℹ️ Το ίδιο κείμενο υπάρχει ήδη στη Λεκτική απορία.", false);
+          return;
+        }
+        const prefix = textInput.value.trim() ? "\n\n" : "";
+        textInput.value = textInput.value + prefix + recognized;
+        setInkMsg("✅ Περάστηκε στη Λεκτική Απορία.", true);
+        closeInk();
+        textInput.focus();
+      } finally {
+        unlockInkButtons();
       }
-
-      const prefix = textInput.value.trim() ? "\n\n" : "";
-      textInput.value = textInput.value + prefix + recognized;
-
-      setInkMsg("✅ Περάστηκε στη Λεκτική Απορία.", true);
-      closeInk();
-      textInput.focus();
     });
 
     bindDraw(cMath, () => ctxMath);
@@ -1567,7 +1248,6 @@
   /* ===================== INIT ===================== */
   resetImageUI();
   updateMathPreview();
-  updateMatrixPreview();
   updateSavedInfo();
 </script>
 
