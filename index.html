@@ -130,7 +130,7 @@
       border:1px solid #e5e7eb; background:#fff; padding:6px 10px; border-radius:999px;
     }
 
-    /* ===== Ink Modal ===== */
+    /* ===== Ink Modal (SIMPLIFIED) ===== */
     .modal-backdrop{
       position:fixed; inset:0;
       background:rgba(15,23,42,.55);
@@ -170,24 +170,56 @@
     .ink-controls input[type="color"]{width:42px;height:30px;padding:0;border:0;background:transparent;cursor:pointer}
     .ink-controls .val{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem;color:#334155;min-width:38px;text-align:left}
 
-    .ink-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:8px 0 10px 0}
-    .ink-left{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-    .ink-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-    .ink-hint{font-size:.78rem;color:#475569}
+    .ink-split{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    @media(min-width:980px){
+      .ink-split{ grid-template-columns:1fr 1fr; }
+    }
+
+    .ink-panel{
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      background:#fafafa;
+      padding:10px;
+    }
+    .ink-panel-title{
+      font-weight:950;
+      font-size:.86rem;
+      color:#0f172a;
+      margin:0 0 8px 0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
 
     .ink-wrap{
       border:1px dashed #cbd5e1;border-radius:14px;background:#fff;
-      height:min(62vh, 560px);width:100%;overflow:hidden;position:relative;
+      height:min(46vh, 420px);width:100%;overflow:hidden;position:relative;
       touch-action:none;
     }
-    canvas#ink-canvas{
+    canvas.ink-canvas{
       width:100%;height:100%;display:block;background:#fff;
       cursor:crosshair;user-select:none;-webkit-user-select:none;touch-action:none;
     }
-    .ink-minirow{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+
+    .ink-panel-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:8px;
+      justify-content:flex-start;
+    }
+    .ink-tip{font-size:.78rem;color:#475569;margin-top:8px}
+
     @media(max-width:650px){
       .modal{margin:10px auto;}
-      .ink-wrap{height:68vh;}
+      .ink-wrap{height:44vh;}
       .modal-title{font-size:14px;}
     }
 
@@ -264,24 +296,7 @@
 
       <div class="row">
         <button class="btn dark" id="open-ink-btn" type="button">✍️ Άνοιξε Πίνακα Γραφής (stylus)</button>
-        <span class="muted">Ιδανικό για tablet/iPad: γράφεις με πένα και παίρνεις hint/διόρθωση.</span>
-      </div>
-
-      <!-- ✅ INK PREVIEW (snapshot) -->
-      <div style="margin-top:10px">
-        <div class="muted"><b>Προεπισκόπηση Πίνακα Γραφής</b></div>
-
-        <img id="ink-preview-img" class="preview"
-             alt="Προεπισκόπηση πίνακα γραφής"
-             style="max-height:220px;display:none" />
-
-        <div id="ink-preview-empty" class="muted" style="margin-top:6px">
-          Δεν έχεις γράψει κάτι ακόμη.
-        </div>
-
-        <div class="row" style="margin-top:8px">
-          <button class="btn ghost" id="ink-preview-clear" type="button">🗑️ Καθάρισε προεπισκόπηση</button>
-        </div>
+        <span class="muted">Για iPad/Tablet: γράφεις μαθηματικά ή λεκτικά και τα περνάς στα πεδία.</span>
       </div>
     </div>
   </div>
@@ -421,6 +436,7 @@
         </div>
       </div>
     </div>
+
   </div>
 
   <!-- ===== ANSWER ===== -->
@@ -460,25 +476,15 @@
   <button id="toast-go" class="toast-btn" type="button">Δες την απάντηση</button>
 </div>
 
-<!-- ===== INK MODAL ===== -->
+<!-- ===== INK MODAL (TWO CANVAS) ===== -->
 <div id="ink-backdrop" class="modal-backdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-label="Πίνακας Γραφής">
     <div class="modal-head">
-      <div class="modal-title">✍️ Πίνακας Γραφής – γράψε άνετα με πένα/δάχτυλο</div>
+      <div class="modal-title">✍️ Πίνακας Γραφής – γράψε (Μαθηματικά / Λεκτικά) και πέρασέ τα στα πεδία</div>
       <button class="modal-close" id="ink-close" type="button">Κλείσιμο ✕</button>
     </div>
 
     <div class="modal-body">
-      <label for="ink-question" style="font-weight:900;font-size:.85rem">Λεκτική απορία για αυτό το βήμα</label>
-      <textarea id="ink-question" placeholder="π.χ. γιατί εδώ αλλάζει πρόσημο; / μπορώ να χρησιμοποιήσω αντικατάσταση;" style="min-height:60px;margin-top:6px"></textarea>
-
-      <div class="row" style="margin-top:6px">
-        <button class="btn ghost" id="ink-send-to-text" type="button">➕ Βάλτο στη Λεκτική απορία</button>
-        <span class="muted">Προαιρετικό: το μεταφέρει και στο κύριο πεδίο.</span>
-      </div>
-
-      <div class="divider"></div>
-
       <div class="ink-controls">
         <div class="ctrl">
           <label for="ink-color">Χρώμα</label>
@@ -492,45 +498,47 @@
         <span class="muted">Λειτουργεί με ποντίκι, touch και stylus.</span>
       </div>
 
-      <div class="ink-toolbar">
-        <div class="ink-left">
-          <button class="btn primary" id="ink-check-step" type="button">🤖 Ρώτα ΑΙ</button>
-          <button class="btn ghost" id="ink-hint" type="button">🧠 Δώσε hint</button>
-          <button class="btn ghost" id="ink-clear" type="button">🔄 Καθάρισε</button>
-        </div>
-        <div class="ink-right">
-          <span class="ink-hint">Στέλνει ό,τι έγραψες + τη Λεκτική απορία + το επίπεδο στο AI.</span>
-        </div>
-      </div>
-
-      <!-- ✅ Recognized expression (like math-input) -->
-      <div class="divider"></div>
-
-      <div class="row" style="align-items:flex-end">
-        <div style="flex:1;min-width:240px">
-          <div class="muted"><b>Αναγνωρισμένη μαθηματική έκφραση (από το γραπτό)</b></div>
-          <textarea id="ink-recognized" placeholder="Θα εμφανιστεί εδώ μετά την αναγνώριση…" style="min-height:64px;margin-top:6px"></textarea>
-
-          <div id="ink-rec-preview-box" style="margin-top:6px;border-radius:10px;border:1px dashed #cbd5e1;padding:6px 8px;background:#f9fafb;min-height:34px;font-size:.9rem;color:#0f172a">
-            <span id="ink-rec-preview-placeholder" style="color:#94a3b8;font-size:.75rem">Η προεπισκόπηση θα εμφανιστεί εδώ…</span>
-            <div id="ink-rec-preview"></div>
+      <div class="ink-split">
+        <!-- ===== Math canvas ===== -->
+        <div class="ink-panel">
+          <div class="ink-panel-title">
+            <span>🧮 Γράψε ΜΑΘΗΜΑΤΙΚΗ έκφραση</span>
           </div>
+
+          <div class="ink-wrap">
+            <canvas id="ink-math-canvas" class="ink-canvas"></canvas>
+          </div>
+
+          <div class="ink-panel-actions">
+            <button class="btn primary" id="ink-math-to-main" type="button">➡️ Πέρασε στη Μαθηματική Έκφραση</button>
+            <button class="btn ghost" id="ink-math-clear" type="button">🔄 Καθάρισε</button>
+          </div>
+
+          <div class="ink-tip">Tip: γράψε καθαρά (π.χ. κλάσματα σε “πάνω/κάτω”).</div>
         </div>
 
-        <div class="row" style="gap:8px;margin-top:0">
-          <button class="btn ghost" id="ink-recognize" type="button">🧠 Αναγνώριση</button>
-          <button class="btn primary" id="ink-to-math" type="button">➡️ Πέρασέ το στην Έκφραση</button>
+        <!-- ===== Text canvas ===== -->
+        <div class="ink-panel">
+          <div class="ink-panel-title">
+            <span>💬 Γράψε ΛΕΚΤΙΚΗ απορία</span>
+          </div>
+
+          <div class="ink-wrap">
+            <canvas id="ink-text-canvas" class="ink-canvas"></canvas>
+          </div>
+
+          <div class="ink-panel-actions">
+            <button class="btn primary" id="ink-text-to-main" type="button">➡️ Πέρασε στη Λεκτική Απορία</button>
+            <button class="btn ghost" id="ink-text-clear" type="button">🔄 Καθάρισε</button>
+          </div>
+
+          <div class="ink-tip">Tip: γράψε μικρές προτάσεις/λέξεις (όχι τεράστια παράγραφο).</div>
         </div>
       </div>
 
       <div class="divider"></div>
-
-      <div class="ink-wrap">
-        <canvas id="ink-canvas"></canvas>
-      </div>
-
-      <div class="ink-minirow">
-        <span class="muted">Tip: Γράψε μεγάλα/καθαρά. Αν είναι πίνακες/συστήματα, χώρισε σε γραμμές.</span>
+      <div class="muted">
+        Πατάς “Πέρασε…” για αναγνώριση και μεταφορά. Μετά, πατάς <b>“Ρώτα το AI”</b> από την κύρια σελίδα.
       </div>
     </div>
   </div>
@@ -665,29 +673,24 @@
          .replace(/Ά/g,'Α').replace(/Έ/g,'Ε').replace(/Ή/g,'Η').replace(/Ί/g,'Ι')
          .replace(/Ό/g,'Ο').replace(/Ύ/g,'Υ').replace(/Ώ/g,'Ω');
 
-    // ημ -> sin
     s = s.replace(/\bημ\s*\(/g, "sin(");
     s = s.replace(/\bημ(?=\s*[A-Za-z0-9π(\\])/g, "sin");
 
-    // συν -> cos
     s = s.replace(/\bσυν\s*\(/g, "cos(");
     s = s.replace(/\bσυν(?=\s*[A-Za-z0-9π(\\])/g, "cos");
 
-    // εφ -> tan
     s = s.replace(/\bεφ\s*\(/g, "tan(");
     s = s.replace(/\bεφ(?=\s*[A-Za-z0-9π(\\])/g, "tan");
 
-    // συνεφ -> cot
     s = s.replace(/\bσυνεφ\s*\(/g, "cot(");
     s = s.replace(/\bσυνεφ(?=\s*[A-Za-z0-9π(\\])/g, "cot");
 
-    // λν -> ln, λογ -> log
     s = s.replace(/\bλν\s*\(/g, "ln(");
     s = s.replace(/\bλν(?=\s*[A-Za-z0-9(\\])/g, "ln");
+
     s = s.replace(/\bλογ\s*\(/g, "log(");
     s = s.replace(/\bλογ(?=\s*[A-Za-z0-9(\\])/g, "log");
 
-    // ριζα(...) -> sqrt(...)
     s = s.replace(/\bριζα\s*\(/gi, "sqrt(");
 
     return s;
@@ -703,7 +706,6 @@
     let t = (text || "").trim();
     if (!t) return "";
 
-    // ✅ normalize Greek math shortcuts before anything else
     t = greekToEnglishMath(t);
 
     const alreadyLatex = isProbablyLatex(t);
@@ -752,31 +754,6 @@
     await renderMathIn(mathPreview);
   }
   mathInput.addEventListener("input", updateMathPreview);
-
-  /* ===================== INK RECOGNIZED PREVIEW (like math input) ===================== */
-  const inkRec = document.getElementById("ink-recognized");
-  const inkRecPreview = document.getElementById("ink-rec-preview");
-  const inkRecPlaceholder = document.getElementById("ink-rec-preview-placeholder");
-
-  async function updateInkRecPreview(){
-    if(!inkRec || !inkRecPreview || !inkRecPlaceholder) return;
-
-    const raw = (inkRec.value || "").trim();
-    if(!raw){
-      inkRecPreview.innerHTML = "";
-      inkRecPlaceholder.style.display = "inline";
-      return;
-    }
-    inkRecPlaceholder.style.display = "none";
-
-    const latex = convertToLatex(raw);
-    inkRecPreview.innerHTML = `\\(${latex}\\)`;
-    await renderMathIn(inkRecPreview);
-  }
-
-  if(inkRec){
-    inkRec.addEventListener("input", updateInkRecPreview);
-  }
 
   /* ===================== AI / ASK / CONTINUE ===================== */
   const answerEl = document.getElementById("ai-answer");
@@ -1322,377 +1299,260 @@
   document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
   document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
 
-  /* ===================== INK (ROBUST + PREVIEW + RESTORE + RECOGNIZE) ===================== */
+  /* ===================== INK (TWO CANVAS, NO ASK AI) ===================== */
   (function(){
-    function $(id){ return document.getElementById(id); }
+    const $ = (id) => document.getElementById(id);
 
-    // ===== Ink preview snapshot =====
-    let lastInkDataURL = "";
+    const bd = $("ink-backdrop");
+    const btnOpen = $("open-ink-btn");
+    const btnClose = $("ink-close");
 
-    function setInkPreviewUI(dataURL){
-      const img = $("ink-preview-img");
-      const empty = $("ink-preview-empty");
-      if(!img || !empty) return;
+    const cMath = $("ink-math-canvas");
+    const cText = $("ink-text-canvas");
 
-      if(dataURL){
-        img.src = dataURL;
-        img.style.display = "block";
-        empty.style.display = "none";
-      }else{
-        img.removeAttribute("src");
-        img.style.display = "none";
-        empty.style.display = "block";
-      }
+    const colorEl = $("ink-color");
+    const sizeEl = $("ink-size");
+    const sizeVal = $("ink-size-val");
+
+    const btnMathToMain = $("ink-math-to-main");
+    const btnTextToMain = $("ink-text-to-main");
+    const btnMathClear = $("ink-math-clear");
+    const btnTextClear = $("ink-text-clear");
+
+    let ctxMath = null;
+    let ctxText = null;
+
+    function setInkStyle(ctx){
+      if(!ctx) return;
+      const color = colorEl?.value || "#111827";
+      const size = Number(sizeEl?.value || 4);
+      if(sizeVal) sizeVal.textContent = String(size);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = size;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
     }
 
-    function saveInkSnapshot(){
-      const c = $("ink-canvas");
-      if(!c) return "";
-      const dataURL = c.toDataURL("image/png");
-      lastInkDataURL = dataURL;
-
-      setInkPreviewUI(dataURL);
-      try{
-        localStorage.setItem("mathAI:lastInk", dataURL);
-        localStorage.setItem("mathAI:lastInkAt", new Date().toISOString());
-      }catch(e){}
-      return dataURL;
-    }
-
-    function clearInkSnapshot(){
-      lastInkDataURL = "";
-      setInkPreviewUI("");
-      try{
-        localStorage.removeItem("mathAI:lastInk");
-        localStorage.removeItem("mathAI:lastInkAt");
-      }catch(e){}
-    }
-
-    let inkCtx = null;
-    let drawing = false;
-    let activePointerId = null;
-    let lastX = 0, lastY = 0;
-
-    function resizeInkCanvas(){
-      const c = $("ink-canvas");
-      if(!c) return;
-      const wrap = c.closest(".ink-wrap");
-      if(!wrap) return;
+    function resizeCanvas(canvas){
+      if(!canvas) return null;
+      const wrap = canvas.closest(".ink-wrap");
+      if(!wrap) return null;
 
       const rect = wrap.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
 
-      c.width  = Math.max(1, Math.floor(rect.width  * dpr));
-      c.height = Math.max(1, Math.floor(rect.height * dpr));
+      canvas.width  = Math.max(1, Math.floor(rect.width  * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
 
-      c.style.width  = rect.width  + "px";
-      c.style.height = rect.height + "px";
+      canvas.style.width  = rect.width + "px";
+      canvas.style.height = rect.height + "px";
 
-      inkCtx = c.getContext("2d");
-      inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      inkCtx.lineCap = "round";
-      inkCtx.lineJoin = "round";
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      setInkStyle(ctx);
+      return ctx;
     }
-
-    function setInkStyle(){
-      if(!inkCtx) return;
-      const color = $("ink-color")?.value || "#111827";
-      const size  = Number($("ink-size")?.value || 4);
-      const valEl = $("ink-size-val");
-      if(valEl) valEl.textContent = String(size);
-      inkCtx.strokeStyle = color;
-      inkCtx.lineWidth = size;
-    }
-
-    function restoreInkSnapshot(){
-      const c = $("ink-canvas");
-      if(!c || !inkCtx) return;
-      if(!lastInkDataURL) return;
-
-      const wrap = c.closest(".ink-wrap");
-      if(!wrap) return;
-      const rect = wrap.getBoundingClientRect();
-
-      const img = new Image();
-      img.onload = () => {
-        inkCtx.save();
-        inkCtx.setTransform(1,0,0,1,0,0);
-        inkCtx.clearRect(0,0,c.width,c.height);
-        inkCtx.restore();
-        inkCtx.drawImage(img, 0, 0, rect.width, rect.height);
-      };
-      img.src = lastInkDataURL;
-    }
-
-    // load snapshot from localStorage once
-    try{
-      const stored = localStorage.getItem("mathAI:lastInk") || "";
-      if(stored) lastInkDataURL = stored;
-      setInkPreviewUI(lastInkDataURL);
-    }catch(e){}
 
     function openInk(){
-      const bd = $("ink-backdrop");
-      if(!bd){ alert("Λείπει το ink-backdrop από το HTML."); return; }
+      if(!bd) return;
       bd.classList.add("show");
       bd.setAttribute("aria-hidden","false");
       document.body.style.overflow = "hidden";
-      resizeInkCanvas();
-      setInkStyle();
-      restoreInkSnapshot();
-
-      // restore last recognized ink text
-      try{
-        const t = localStorage.getItem("mathAI:lastInkText") || "";
-        const box = document.getElementById("ink-recognized");
-        if(box && t){
-          box.value = t;
-          updateInkRecPreview();
-        }
-      }catch(e){}
-
-      setTimeout(() => $("ink-close")?.focus(), 30);
+      ctxMath = resizeCanvas(cMath);
+      ctxText = resizeCanvas(cText);
+      setTimeout(() => btnClose?.focus(), 30);
     }
 
     function closeInk(){
-      const bd = $("ink-backdrop");
       if(!bd) return;
-      saveInkSnapshot();
       bd.classList.remove("show");
       bd.setAttribute("aria-hidden","true");
       document.body.style.overflow = "";
     }
 
-    function getPos(ev){
-      const c = $("ink-canvas");
-      const r = c.getBoundingClientRect();
+    function clearCanvas(canvas, ctx){
+      if(!canvas || !ctx) return;
+      ctx.save();
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.restore();
+    }
+
+    function getPos(canvas, ev){
+      const r = canvas.getBoundingClientRect();
       return { x: ev.clientX - r.left, y: ev.clientY - r.top };
     }
 
-    function startDraw(ev){
-      const c = $("ink-canvas");
-      if(!inkCtx) return;
-      if(activePointerId !== null && ev.pointerId !== activePointerId) return;
-      activePointerId = ev.pointerId;
+    function bindDraw(canvas, getCtx){
+      let drawing = false;
+      let activePointerId = null;
+      let lastX = 0, lastY = 0;
 
-      drawing = true;
-      setInkStyle();
+      function start(ev){
+        const ctx = getCtx();
+        if(!ctx) return;
 
-      const p = getPos(ev);
-      lastX = p.x; lastY = p.y;
+        if(activePointerId !== null && ev.pointerId !== activePointerId) return;
+        activePointerId = ev.pointerId;
 
-      try{ c.setPointerCapture(ev.pointerId); }catch(e){}
-      ev.preventDefault();
-    }
+        drawing = true;
+        setInkStyle(ctx);
+        const p = getPos(canvas, ev);
+        lastX = p.x; lastY = p.y;
 
-    function moveDraw(ev){
-      if(!drawing || ev.pointerId !== activePointerId) return;
-      if(!inkCtx) return;
-
-      const p = getPos(ev);
-
-      const pressure = (typeof ev.pressure === "number" && ev.pressure > 0) ? ev.pressure : 0.5;
-      const base = Number($("ink-size")?.value || 4);
-      inkCtx.lineWidth = base * (0.75 + pressure * 0.9);
-
-      inkCtx.beginPath();
-      inkCtx.moveTo(lastX, lastY);
-      inkCtx.lineTo(p.x, p.y);
-      inkCtx.stroke();
-
-      lastX = p.x; lastY = p.y;
-      ev.preventDefault();
-    }
-
-    function endDraw(ev){
-      const c = $("ink-canvas");
-      if(ev.pointerId !== activePointerId) return;
-      drawing = false;
-      try{ c.releasePointerCapture(ev.pointerId); }catch(e){}
-      activePointerId = null;
-      ev.preventDefault();
-    }
-
-    function clearInk(){
-      const c = $("ink-canvas");
-      if(!inkCtx || !c) return;
-      inkCtx.save();
-      inkCtx.setTransform(1,0,0,1,0,0);
-      inkCtx.clearRect(0,0,c.width,c.height);
-      inkCtx.restore();
-    }
-
-    async function canvasToBlob(){
-      const c = $("ink-canvas");
-      return await new Promise(resolve => c.toBlob(b => resolve(b), "image/png", 0.92));
-    }
-
-    function pushRecognizedToInkBox(recognized){
-      const box = document.getElementById("ink-recognized");
-      if(!box) return;
-      box.value = recognized || "";
-      try{
-        localStorage.setItem("mathAI:lastInkText", box.value);
-        localStorage.setItem("mathAI:lastInkTextAt", new Date().toISOString());
-      }catch(e){}
-      updateInkRecPreview();
-    }
-
-    async function recognizeInkToText(){
-      const blob = await canvasToBlob();
-      if(!blob){
-        await renderAnswer("Δεν μπόρεσα να πάρω εικόνα από τον καμβά.");
-        return "";
+        try{ canvas.setPointerCapture(ev.pointerId); }catch(e){}
+        ev.preventDefault();
       }
+
+      function move(ev){
+        const ctx = getCtx();
+        if(!ctx || !drawing || ev.pointerId !== activePointerId) return;
+
+        const p = getPos(canvas, ev);
+        const pressure = (typeof ev.pressure === "number" && ev.pressure > 0) ? ev.pressure : 0.5;
+        const base = Number(sizeEl?.value || 4);
+        ctx.lineWidth = base * (0.75 + pressure * 0.9);
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+
+        lastX = p.x; lastY = p.y;
+        ev.preventDefault();
+      }
+
+      function end(ev){
+        if(ev.pointerId !== activePointerId) return;
+        drawing = false;
+        try{ canvas.releasePointerCapture(ev.pointerId); }catch(e){}
+        activePointerId = null;
+        ev.preventDefault();
+      }
+
+      canvas.addEventListener("pointerdown", start, {passive:false});
+      canvas.addEventListener("pointermove", move, {passive:false});
+      canvas.addEventListener("pointerup", end, {passive:false});
+      canvas.addEventListener("pointercancel", end, {passive:false});
+      canvas.addEventListener("pointerleave", end, {passive:false});
+    }
+
+    async function canvasToBlob(canvas){
+      return await new Promise(resolve => canvas.toBlob(b => resolve(b), "image/png", 0.92));
+    }
+
+    function cleanRecognitionText(txt){
+      const t = (txt || "").replace(/\r/g,"").trim();
+      if(!t) return "";
+      return t.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,6).join("\n");
+    }
+
+    async function recognizeMathFromCanvas(){
+      const blob = await canvasToBlob(cMath);
+      if(!blob) return "";
+
+      setStatus("Αναγνώριση μαθηματικής έκφρασης…");
 
       const prompt =
         "Αναγνώρισε την ΜΑΘΗΜΑΤΙΚΗ ΕΚΦΡΑΣΗ που είναι γραμμένη στην εικόνα.\n" +
         "ΕΠΙΣΤΡΕΨΕ ΜΟΝΟ την έκφραση σε απλό κείμενο (χωρίς εξηγήσεις).\n" +
-        "Αν δεις ελληνικές συντομογραφίες (ημ, συν, εφ, συνεφ, λν, λογ), ΚΡΑΤΗΣΕ τες όπως είναι.\n" +
-        "Μην βάλεις προτάσεις.";
-
-      setStatus("Αναγνώριση γραπτού…");
+        "Αν υπάρχουν ελληνικές συντομογραφίες (ημ, συν, εφ, συνεφ, λν, λογ), κράτα τες όπως είναι.\n" +
+        "Μην γράψεις προτάσεις.";
 
       const formData = new FormData();
-      formData.append("image", new File([blob], "ink.png", {type:"image/png"}));
+      formData.append("image", new File([blob], "ink_math.png", {type:"image/png"}));
       formData.append("question", prompt);
       formData.append("level", currentLevel);
 
       try{
         const res = await fetch(`${BASE_URL}/check-image`, { method:"POST", body: formData });
         const data = await res.json();
-        const txt = (data.answer || "").trim();
-        const cleaned = txt.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,2).join(" ");
-        return cleaned;
+        return cleanRecognitionText(data.answer || "");
       }catch(e){
-        await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image) στην αναγνώριση.");
+        await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image) στην αναγνώριση μαθηματικών.");
         return "";
       }finally{
         setStatus("");
       }
     }
 
-    async function sendInkToAI(mode){
-      const blob = await canvasToBlob();
-      if(!blob){ await renderAnswer("Δεν μπόρεσα να πάρω εικόνα από τον καμβά."); return; }
+    async function recognizeTextFromCanvas(){
+      const blob = await canvasToBlob(cText);
+      if(!blob) return "";
 
-      const math = mathInput.value.trim();
-      const text = textInput.value.trim();
-      const inkExtra = ($("ink-question")?.value || "").trim();
+      setStatus("Αναγνώριση λεκτικής απορίας…");
 
-      let userAsk = [];
-      if (math) userAsk.push("Μαθηματική έκφραση:\n" + math);
-      if (text) userAsk.push("Λεκτική απορία:\n" + text);
-      if (inkExtra) userAsk.push("Επιπλέον απορία για το γραμμένο βήμα:\n" + inkExtra);
-
-      const modeText = (mode === "hint")
-        ? "ΖΗΤΟΥΜΕΝΟ: Δώσε ΜΟΝΟ hint/κατεύθυνση (όχι πλήρη λύση). Δώσε 1-3 μικρά hints και 1 ερώτηση για να σκεφτεί ο μαθητής."
-        : "ΖΗΤΟΥΜΕΝΟ: (1) Μετέγραψε καθαρά την έκφραση από το γραπτό. (2) Αν δεις ελληνικές συντομογραφίες: ημ→sin, συν→cos, εφ→tan, συνεφ→cot, λν→ln, λογ→log. (3) Λύσε/διόρθωσε βήμα-βήμα με βάση την τελική μορφή. Δείξε το σωστό επόμενο βήμα.";
-
-      const questionForImage = (userAsk.join("\n\n") || " ") + "\n\n" + modeText;
-
-      setStatus(mode === "hint" ? "Το AI ετοιμάζει hint…" : "Το AI ελέγχει/λύνει από το γραπτό…");
-      answerEl.innerHTML = mode === "hint" ? "Το AI ετοιμάζει hint…" : "Το AI ελέγχει/λύνει από το γραπτό…";
-      await renderMathIn(answerEl);
-      showContinueBox(false);
+      const prompt =
+        "Διάβασε το χειρόγραφο κείμενο στην εικόνα και επέστρεψε το ως απλό κείμενο.\n" +
+        "ΕΠΙΣΤΡΕΨΕ ΜΟΝΟ το κείμενο (χωρίς σχόλια, χωρίς bullet points).\n" +
+        "Αν δεν φαίνεται τίποτα, επέστρεψε κενό.";
 
       const formData = new FormData();
-      formData.append("image", new File([blob], "ink.png", {type:"image/png"}));
-      formData.append("question", questionForImage);
+      formData.append("image", new File([blob], "ink_text.png", {type:"image/png"}));
+      formData.append("question", prompt);
       formData.append("level", currentLevel);
 
       try{
         const res = await fetch(`${BASE_URL}/check-image`, { method:"POST", body: formData });
         const data = await res.json();
-        await renderAnswer(data.answer || "Δεν ήρθε απάντηση από τον server.");
-        if ($("ink-question")) $("ink-question").value = "";
-        closeInk();
+        return cleanRecognitionText(data.answer || "");
       }catch(e){
-        await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image).");
+        await renderAnswer("Σφάλμα σύνδεσης με τον server (/check-image) στην αναγνώριση κειμένου.");
+        return "";
+      }finally{
+        setStatus("");
       }
-      setStatus("");
     }
 
-    document.addEventListener("click", async (e) => {
-      if(e.target.closest("#open-ink-btn")) openInk();
-      if(e.target.closest("#ink-close")) closeInk();
+    btnOpen?.addEventListener("click", openInk);
+    btnClose?.addEventListener("click", closeInk);
 
-      const bd = $("ink-backdrop");
-      if(bd && e.target === bd) closeInk();
-
-      if(e.target.closest("#ink-clear")){
-        clearInk();
-        clearInkSnapshot();
-      }
-
-      if(e.target.closest("#ink-preview-clear")){
-        clearInkSnapshot();
-      }
-
-      if(e.target.closest("#ink-send-to-text")){
-        const q = ($("ink-question")?.value || "").trim();
-        if(!q) return;
-        const prefix = textInput.value.trim() ? "\n\n" : "";
-        textInput.value = textInput.value.trim() + prefix + "Απορία (από Πίνακα Γραφής):\n" + q;
-        if ($("ink-question")) $("ink-question").value = "";
-        textInput.focus();
-      }
-
-      if(e.target.closest("#ink-recognize")){
-        const recognized = await recognizeInkToText();
-        if(recognized) pushRecognizedToInkBox(recognized);
-      }
-
-      if(e.target.closest("#ink-to-math")){
-        const box = document.getElementById("ink-recognized");
-        let raw = (box?.value || "").trim();
-
-        if(!raw){
-          const recognized = await recognizeInkToText();
-          if(!recognized) return;
-          pushRecognizedToInkBox(recognized);
-          raw = recognized;
-        }
-
-        // ✅ Greek -> English, then set as main math input
-        const finalText = greekToEnglishMath(raw);
-        mathInput.value = finalText;
-        await updateMathPreview();
-        closeInk();
-      }
-
-      if(e.target.closest("#ink-hint")) sendInkToAI("hint");
-      if(e.target.closest("#ink-check-step")) sendInkToAI("step");
-    });
-
-    document.addEventListener("input", (e) => {
-      if(e.target && (e.target.id === "ink-size" || e.target.id === "ink-color")){
-        setInkStyle();
-      }
+    bd?.addEventListener("click", (e) => {
+      if(e.target === bd) closeInk();
     });
 
     window.addEventListener("keydown", (e) => {
-      if(e.key === "Escape"){
-        const bd = $("ink-backdrop");
-        if(bd && bd.classList.contains("show")) closeInk();
-      }
+      if(e.key === "Escape" && bd?.classList.contains("show")) closeInk();
     });
 
     window.addEventListener("resize", () => {
-      const bd = $("ink-backdrop");
-      if(bd && bd.classList.contains("show")) resizeInkCanvas();
+      if(bd?.classList.contains("show")){
+        ctxMath = resizeCanvas(cMath);
+        ctxText = resizeCanvas(cText);
+      }
     }, {passive:true});
 
-    function bindCanvas(){
-      const c = $("ink-canvas");
-      if(!c) return;
-      c.addEventListener("pointerdown", startDraw, {passive:false});
-      c.addEventListener("pointermove", moveDraw, {passive:false});
-      c.addEventListener("pointerup", endDraw, {passive:false});
-      c.addEventListener("pointercancel", endDraw, {passive:false});
-      c.addEventListener("pointerleave", endDraw, {passive:false});
-    }
-    bindCanvas();
+    sizeEl?.addEventListener("input", () => { setInkStyle(ctxMath); setInkStyle(ctxText); });
+    colorEl?.addEventListener("input", () => { setInkStyle(ctxMath); setInkStyle(ctxText); });
+
+    btnMathClear?.addEventListener("click", () => clearCanvas(cMath, ctxMath));
+    btnTextClear?.addEventListener("click", () => clearCanvas(cText, ctxText));
+
+    btnMathToMain?.addEventListener("click", async () => {
+      const recognized = await recognizeMathFromCanvas();
+      if(!recognized.trim()) return;
+
+      // Greek shortcuts -> English, then paste
+      const finalText = greekToEnglishMath(recognized);
+      mathInput.value = finalText;
+      await updateMathPreview();
+      closeInk();
+      mathInput.focus();
+    });
+
+    btnTextToMain?.addEventListener("click", async () => {
+      const recognized = await recognizeTextFromCanvas();
+      if(!recognized.trim()) return;
+
+      const prefix = textInput.value.trim() ? "\n\n" : "";
+      textInput.value = textInput.value.trim() + prefix + recognized;
+      closeInk();
+      textInput.focus();
+    });
+
+    // bind drawing
+    bindDraw(cMath, () => ctxMath);
+    bindDraw(cText, () => ctxText);
   })();
 
   /* ===================== INIT ===================== */
@@ -1700,7 +1560,6 @@
   updateMathPreview();
   updateMatrixPreview();
   updateSavedInfo();
-  updateInkRecPreview();
 </script>
 
 </body>
