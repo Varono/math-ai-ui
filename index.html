@@ -1410,303 +1410,376 @@
   document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
   document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
 
-  /* ===================== EXAMS (Generator) ===================== */
-  // Αυτό το κομμάτι δουλεύει μόνο αν έχεις βάλει τα αντίστοιχα HTML ids στο Μέρος 1.
+  
+    /* ===================== EXAMS (Generator) ===================== */
+  // ✅ ΣΥΝΔΕΕΤΑΙ ΜΕ ΤΑ IDs ΤΟΥ ΔΙΚΟΥ ΣΟΥ HTML (exam-time, add-part-btn, κλπ)
+
+  // Show BETA tab only with ?beta=1
+  (function(){
+    const beta = new URLSearchParams(location.search).get("beta");
+    const tabBtn = document.getElementById("exam-tab-btn");
+    if (tabBtn && beta === "1") tabBtn.style.display = "";
+  })();
+
   const EX = {
-    gradeSelect: document.getElementById("exam-grade"),
-    scaleSelect: document.getElementById("exam-scale"),
-    minutesInput: document.getElementById("exam-minutes"),
-    stepSelect: document.getElementById("exam-step"),
-    diffRange: document.getElementById("exam-diff"),
+    scale: document.getElementById("exam-scale"),
+    step: document.getElementById("exam-step"),
+    time: document.getElementById("exam-time"),
+    diff: document.getElementById("exam-difficulty"),
     diffLabel: document.getElementById("exam-diff-label"),
-    bloomBox: document.getElementById("exam-bloom"),
-    scopeInfo: document.getElementById("exam-scope-info"),
-    scopeInput: document.getElementById("exam-scope-text"),
-    partsWrap: document.getElementById("exam-parts"),
-    addPartBtn: document.getElementById("exam-add-part"),
-    validateBtn: document.getElementById("exam-validate"),
-    pushBtn: document.getElementById("exam-to-text"),
-    genBtn: document.getElementById("exam-generate"),
-    status: document.getElementById("exam-status")
+    diffMix: document.getElementById("exam-diff-mix"),
+    bloomTags: document.getElementById("bloom-tags"),
+
+    book: document.getElementById("exam-book"),
+    chapter: document.getElementById("exam-chapter"),
+    pages: document.getElementById("exam-pages"),
+
+    parts: document.getElementById("exam-parts"),
+    sumPill: document.getElementById("exam-sum-pill"),
+    addPart: document.getElementById("add-part-btn"),
+    resetParts: document.getElementById("reset-parts-btn"),
+
+    toText: document.getElementById("exam-to-text-btn"),
+    gen: document.getElementById("exam-generate-btn"),
+    status: document.getElementById("exam-status"),
   };
 
-  const BLOOM_LEVELS = ["Remember","Understand","Apply","Analyze","Evaluate","Create"];
+  const EX_GRADE = "G_LYKEIO_MATH_KAT";
+
+  const BLOOM = [
+    {key:"remember", label:"Θυμάμαι"},
+    {key:"understand", label:"Κατανοώ"},
+    {key:"apply", label:"Εφαρμόζω"},
+    {key:"analyze", label:"Αναλύω"},
+    {key:"evaluate", label:"Αξιολογώ"},
+    {key:"create", label:"Δημιουργώ"},
+  ];
+
+  // Recommended distributions (σε %), ανά δυσκολία 1..5
   const BLOOM_PRESETS = {
-    1: [30, 35, 25, 8, 2, 0],
-    2: [20, 30, 30, 15, 4, 1],
-    3: [12, 25, 30, 20, 10, 3],
-    4: [8, 18, 28, 24, 15, 7],
-    5: [5, 12, 23, 27, 20, 13]
+    1: [30, 35, 25,  8,  2,  0],
+    2: [20, 30, 30, 15,  4,  1],
+    3: [12, 25, 30, 20, 10,  3],
+    4: [ 8, 18, 28, 24, 15,  7],
+    5: [ 5, 12, 23, 27, 20, 13],
   };
-  const DIFF_LABELS = {
+
+  const DIFF_TEXT = {
     1: "1/5 • Πολύ εύκολο",
     2: "2/5 • Εύκολο",
     3: "3/5 • Μέτριο",
     4: "4/5 • Δύσκολο",
-    5: "5/5 • Πολύ δύσκολο"
+    5: "5/5 • Πολύ δύσκολο",
   };
 
-  function setExamMsg(msg="", ok=true){
-    if (!EX.status) return;
+  function exMsg(msg="", ok=true){
+    if(!EX.status) return;
     EX.status.textContent = msg;
     EX.status.style.color = ok ? "#065f46" : "#dc2626";
     EX.status.style.fontWeight = "900";
   }
 
   function suggestedStep(scale){
-    // Προτάσεις σύμφωνα με αυτά που είπες:
-    // 100/100: προτείνουμε 0.5 αλλά επιτρέπουμε 0.25
-    // 20/20: προτείνουμε 0.25
-    // 10/10: προτείνουμε 0.25
-    // 40/40: λογικά 0.5 (αλλά μπορεί να αλλάξει)
-    if (scale >= 100) return 0.5;
+    if (scale === 100) return 0.5;
     if (scale === 40) return 0.5;
-    return 0.25;
+    return 0.25; // 10/20
   }
 
-  function roundToStep(x, step){
-    const k = Math.round(x / step);
-    return Math.max(0, k * step);
+  function isMultipleOfStep(x, step){
+    const k = x / step;
+    return Math.abs(k - Math.round(k)) < 1e-9;
   }
 
   function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
 
-  function bloomTextFromPreset(level){
-    const p = BLOOM_PRESETS[level] || BLOOM_PRESETS[3];
-    const lines = BLOOM_LEVELS.map((name, i) => `${name}: ${p[i]}%`).join(" • ");
-    return `Πρόταση (Bloom mix): ${lines}`;
+  function renderBloom(diff){
+    const p = BLOOM_PRESETS[diff] || BLOOM_PRESETS[3];
+    EX.bloomTags.innerHTML = "";
+    BLOOM.forEach((b, i) => {
+      const s = document.createElement("span");
+      s.className = "tag";
+      s.textContent = `${b.label} ${p[i]}%`;
+      EX.bloomTags.appendChild(s);
+    });
+    EX.diffLabel.textContent = DIFF_TEXT[diff] || `${diff}/5`;
+    EX.diffMix.textContent =
+      `Πρόταση μείγματος: ${p[0]}% Θυμάμαι • ${p[1]}% Κατανοώ • ${p[2]}% Εφαρμόζω • ${p[3]}% Αναλύω • ${p[4]}% Αξιολογώ • ${p[5]}% Δημιουργώ`;
   }
 
-  function ensureExamUI(){
-    // Αν δεν υπάρχουν τα elements, απλά μην πετάς errors.
-    return EX.scaleSelect && EX.minutesInput && EX.stepSelect && EX.partsWrap && EX.diffRange;
+  function updateSumPill(){
+    const scale = Number(EX.scale.value || 100);
+    const step = Number(EX.step.value || 0.5);
+    const parts = [...EX.parts.querySelectorAll(".part-row")];
+    const pts = parts.map(r => Number(r.querySelector('[data-points]').value || 0));
+    const total = sum(pts);
+
+    let txt = `Σύνολο: ${total}/${scale}`;
+    let ok = true;
+
+    if (!isMultipleOfStep(total, step)) { ok = false; txt += ` • ⚠ όχι πολλαπλάσιο του ${step}`; }
+    if (Math.abs(total - scale) > 1e-9) { ok = false; txt += ` • ⚠ δεν ισούται με κλίμακα`; }
+
+    EX.sumPill.textContent = txt;
+    EX.sumPill.style.color = ok ? "#065f46" : "#b91c1c";
+    return {total, ok};
+  }
+
+  function makePartName(idx){
+    // Α, Β, Γ, Δ, Ε...
+    const letters = ["Α","Β","Γ","Δ","Ε","Ζ","Η","Θ","Ι","Κ","Λ","Μ"];
+    return (letters[idx] || `Μ${idx+1}`) + " Μέρος";
+  }
+
+  function addPart({name, points, q} = {}){
+    const idx = EX.parts.querySelectorAll(".part-row").length;
+    const row = document.createElement("div");
+    row.className = "part-row";
+    row.innerHTML = `
+      <div class="part-head">
+        <div class="part-title">${(name || makePartName(idx)).replace(/</g,"&lt;")}</div>
+        <button class="btn ghost" type="button" data-del>✕ Αφαίρεση</button>
+      </div>
+
+      <div class="inline3" style="margin-top:8px">
+        <div>
+          <div class="muted"><b>Όνομα μέρους</b></div>
+          <input type="text" data-name value="${(name || makePartName(idx)).replace(/"/g,"&quot;")}" />
+        </div>
+        <div>
+          <div class="muted"><b>Μονάδες μέρους</b></div>
+          <input type="number" data-points min="0" step="0.25" value="${Number(points||0)}" />
+        </div>
+        <div>
+          <div class="muted"><b>Ερωτήσεις</b></div>
+          <input type="number" data-q min="0" step="1" value="${Number(q||0)}" />
+        </div>
+      </div>
+
+      <div class="small" data-hint style="margin-top:6px"></div>
+    `;
+
+    const del = row.querySelector("[data-del]");
+    const inName = row.querySelector("[data-name]");
+    const inPts  = row.querySelector("[data-points]");
+    const inQ    = row.querySelector("[data-q]");
+    const hint   = row.querySelector("[data-hint]");
+
+    function refresh(){
+      const scale = Number(EX.scale.value || 100);
+      const step = Number(EX.step.value || 0.5);
+      const pts = Number(inPts.value || 0);
+      const q = Number(inQ.value || 0);
+
+      // enforce step
+      if (pts && !isMultipleOfStep(pts, step)){
+        hint.innerHTML = `<span class="danger">⚠ Οι μονάδες πρέπει να είναι πολλαπλάσιο του ${step}.</span>`;
+      } else {
+        hint.textContent = "";
+      }
+
+      if (q > 0 && pts > 0){
+        const per = pts / q;
+        hint.textContent = `≈ ${per.toFixed(3)} μον./ερώτηση (θα μοιραστεί στο βήμα ${step})`;
+      }
+
+      updateSumPill();
+      exMsg("");
+    }
+
+    del.addEventListener("click", () => { row.remove(); updateSumPill(); exMsg(""); });
+    [inName, inPts, inQ].forEach(el => el.addEventListener("input", refresh));
+    EX.parts.appendChild(row);
+    refresh();
+  }
+
+  function resetParts(){
+    EX.parts.innerHTML = "";
+    const scale = Number(EX.scale.value || 100);
+    // default: 2 μέρη που “κάθονται” στην κλίμακα
+    if (scale === 20){
+      addPart({name:"Α Μέρος", points:10, q:5});
+      addPart({name:"Β Μέρος", points:10, q:3});
+    } else if (scale === 10){
+      addPart({name:"Α Μέρος", points:5, q:3});
+      addPart({name:"Β Μέρος", points:5, q:2});
+    } else if (scale === 40){
+      addPart({name:"Α Μέρος", points:20, q:6});
+      addPart({name:"Β Μέρος", points:20, q:4});
+    } else {
+      addPart({name:"Α Μέρος", points:40, q:8});
+      addPart({name:"Β Μέρος", points:60, q:6});
+    }
+    updateSumPill();
   }
 
   function getExamState(){
-    const scale = Number(EX.scaleSelect?.value || 100);
-    const minutes = Number(EX.minutesInput?.value || 0);
-    const step = Number(EX.stepSelect?.value || suggestedStep(scale));
-    const diff = Number(EX.diffRange?.value || 3);
-    const grade = (EX.gradeSelect?.value || "").trim();
+    const scale = Number(EX.scale.value || 100);
+    const step = Number(EX.step.value || 0.5);
+    const time = Number(EX.time.value || 0);
+    const diff = Number(EX.diff.value || 3);
+    const book_id = EX.book.value || "";
+    const chapter_id = EX.chapter.value || "";
+    const pages = (EX.pages.value || "").trim();
 
-    const parts = [...EX.partsWrap?.querySelectorAll("[data-part]") || []].map(row => ({
-      name: row.querySelector("[data-name]")?.value?.trim() || "Μέρος",
-      points: Number(row.querySelector("[data-points]")?.value || 0),
-      q: Number(row.querySelector("[data-q]")?.value || 0)
+    const parts = [...EX.parts.querySelectorAll(".part-row")].map(r => ({
+      name: (r.querySelector("[data-name]").value || "").trim(),
+      points: Number(r.querySelector("[data-points]").value || 0),
+      q: Number(r.querySelector("[data-q]").value || 0),
     }));
 
-    const scopeText = (EX.scopeInput?.value || "").trim();
-
-    return { grade, scale, minutes, step, diff, parts, scopeText };
+    return { grade: EX_GRADE, scale, step, time, diff, book_id, chapter_id, pages, parts };
   }
 
-  function validateExam(state){
+  function validateExam(st){
     const errs = [];
+    if (!st.time || st.time <= 0) errs.push("Βάλε ωφέλιμο χρόνο (λεπτά).");
+    if (!st.parts.length) errs.push("Πρόσθεσε τουλάχιστον 1 μέρος.");
+    if (![0.25,0.5,1].includes(st.step)) errs.push("Το min βήμα πρέπει να είναι 0.25 ή 0.5 ή 1.");
 
-    if (!state.minutes || state.minutes <= 0) errs.push("Βάλε ωφέλιμο χρόνο (λεπτά).");
-    if (!state.scale || state.scale <= 0) errs.push("Βάλε κλίμακα (10/20/40/100).");
-    if (!state.step || state.step <= 0) errs.push("Βάλε ελάχιστο βήμα μονάδων (0.25 / 0.5 / 1).");
+    const total = sum(st.parts.map(p => p.points));
+    if (Math.abs(total - st.scale) > 1e-9) errs.push(`Το άθροισμα μονάδων (${total}) δεν ισούται με κλίμακα (${st.scale}).`);
 
-    // Step sanity
-    if (![0.25,0.5,1].includes(state.step)) errs.push("Το βήμα πρέπει να είναι 0.25 ή 0.5 ή 1.");
-
-    if (!state.parts.length) errs.push("Βάλε τουλάχιστον 1 μέρος (π.χ. Α, Β).");
-
-    let s = 0;
-    for (const [i,p] of state.parts.entries()){
-      if (!p.name) errs.push(`Μέρος #${i+1}: λείπει όνομα.`);
-      if (!p.points || p.points <= 0) errs.push(`Μέρος "${p.name}": βάλε μονάδες > 0.`);
-      if (p.q && p.q > 0){
-        const per = p.points / p.q;
-        // δεν απαιτούμε να διαιρείται ακριβώς, αλλά προειδοποιούμε:
-        const perRounded = roundToStep(per, state.step);
-        if (Math.abs(perRounded - per) > 1e-9){
-          // ok, θα γίνει "μοίρασμα" στο prompt
-        }
-      }
-      // ελέγχουμε ότι points είναι πολλαπλάσιο του step (σε tolerance)
-      const m = p.points / state.step;
-      if (Math.abs(m - Math.round(m)) > 1e-9) errs.push(`Μέρος "${p.name}": οι μονάδες πρέπει να είναι πολλαπλάσιο του ${state.step}.`);
-      s += p.points;
+    for (const p of st.parts){
+      if (!p.name) errs.push("Κάποιο μέρος δεν έχει όνομα.");
+      if (!p.points || p.points <= 0) errs.push(`Το μέρος "${p.name || "?"}" πρέπει να έχει μονάδες > 0.`);
+      if (!isMultipleOfStep(p.points, st.step)) errs.push(`Το μέρος "${p.name}" πρέπει να έχει μονάδες πολλαπλάσιο του ${st.step}.`);
+      if (p.q < 0) errs.push(`Το μέρος "${p.name}" έχει άκυρο αριθμό ερωτήσεων.`);
     }
-
-    const mTotal = s / state.step;
-    if (Math.abs(mTotal - Math.round(mTotal)) > 1e-9) errs.push(`Το άθροισμα μονάδων δεν “κάθεται” στο βήμα ${state.step}.`);
-
-    if (Math.abs(s - state.scale) > 1e-9) errs.push(`Το άθροισμα μονάδων (${s}) δεν ισούται με την κλίμακα (${state.scale}).`);
-
     return errs;
   }
 
-  function examPrompt(state){
-    const bloom = BLOOM_PRESETS[state.diff] || BLOOM_PRESETS[3];
-
-    const partsLines = state.parts.map(p => {
-      const qInfo = (p.q && p.q>0)
-        ? `• ${p.q} ερωτήσεις (μοίρασε τις μονάδες στο βήμα ${state.step}, ώστε να αθροίζουν ακριβώς ${p.points})`
-        : `• (ο εκπαιδευτικός θα επιλέξει αριθμό ερωτήσεων, κράτα το μέρος στα ${p.points})`;
-      return `- ${p.name}: ${p.points}/${state.scale} ${qInfo}`;
+  function buildExamContext(st){
+    const preset = BLOOM_PRESETS[st.diff] || BLOOM_PRESETS[3];
+    const bloomLine = BLOOM.map((b,i)=>`${b.label}:${preset[i]}%`).join(" • ");
+    const partsLine = st.parts.map(p => {
+      const per = (p.q>0 && p.points>0) ? (p.points/p.q) : null;
+      return `- ${p.name}: ${p.points}/${st.scale}` + (per ? ` (≈ ${per.toFixed(3)} μον./ερώτηση, ${p.q} ερωτ.)` : "");
     }).join("\n");
 
-    const bloomLine = BLOOM_LEVELS.map((n,i)=>`${n}=${bloom[i]}%`).join(", ");
-
-    const scope = state.scopeText
-      ? `\n\nΎλη/Περιορισμοί (όπως δήλωσε ο εκπαιδευτικός):\n${state.scopeText}\n` +
-        `\nΑν υπάρχουν σελίδες/ενότητες εκτός ύλης, ΜΗΝ τις χρησιμοποιήσεις.`
-      : "";
+    const scopeLine =
+      `Ύλη (source: scope.json):\n` +
+      `- Τεύχος: ${st.book_id || "—"}\n` +
+      `- Κεφάλαιο: ${st.chapter_id || "—"}\n` +
+      (st.pages ? `- Σελίδες: ${st.pages}\n` : "");
 
     return (
-`Θέλω να δημιουργήσεις ΕΠΑΓΓΕΛΜΑΤΙΚΟ διαγώνισμα/τεστ μαθηματικών για Κύπρο (Λύκειο).
-Να είναι έτοιμο για εκτύπωση, με καθαρή δομή, κενά για απαντήσεις, και ΣΩΣΤΕΣ μονάδες.
-
-Ρυθμίσεις:
-- Κλίμακα: ${state.scale}/${state.scale}
-- Βήμα μονάδων: ${state.step} (π.χ. επιτρέπονται 0.25 ή 0.5)
-- Ωφέλιμος χρόνος: ${state.minutes} λεπτά
-- Δυσκολία: ${DIFF_LABELS[state.diff] || state.diff}/5
-- Προτεινόμενο Bloom mix: ${bloomLine}
-
-Δομή διαγωνίσματος (Μέρη / Μονάδες):
-${partsLines}
-
-Οδηγίες:
-- Δώσε τίτλο, οδηγίες προς μαθητές, και στο τέλος συνολικό άθροισμα μονάδων.
-- Βάλε ποικιλία θεμάτων σύμφωνα με Bloom mix.
-- Πρόσεχε να ταιριάζει ο χρόνος με την έκταση/δυσκολία.
-- Να μην βάζεις “πολλαπλής” αν δεν ζητηθεί. Προτίμησε κλασικές ερωτήσεις/υποερωτήματα.
-- ΜΗΝ δώσεις λύσεις εδώ. (Λύσεις θα ζητηθούν σε ξεχωριστό prompt.)
-${scope}`
+      `=== ΔΙΑΓΩΝΙΣΜΑ — ΡΥΘΜΙΣΕΙΣ ===\n` +
+      `Grade: ${st.grade}\n` +
+      `Κλίμακα: ${st.scale}/${st.scale}\n` +
+      `Min βήμα: ${st.step}\n` +
+      `Χρόνος: ${st.time} λεπτά\n` +
+      `Δυσκολία: ${DIFF_TEXT[st.diff] || st.diff}\n` +
+      `Bloom (recommended): ${bloomLine}\n\n` +
+      `${scopeLine}\n` +
+      `Δομή:\n${partsLine}\n\n` +
+      `Οδηγίες:\n` +
+      `- Να παραχθεί διαγώνισμα έτοιμο για εκτύπωση.\n` +
+      `- Να τηρηθούν αυστηρά οι μονάδες και η κλίμακα.\n` +
+      `- Να γίνει ποικιλία σύμφωνα με Bloom.\n` +
+      `- Να ΜΗΝ χρησιμοποιηθούν σελίδες/ενότητες εκτός ύλης.\n`
     );
   }
 
-  function addExamPartRow({name="Α Μέρος", points=0, q=0} = {}){
-    if (!EX.partsWrap) return;
-    const row = document.createElement("div");
-    row.className = "row";
-    row.setAttribute("data-part","1");
-    row.style.alignItems = "end";
-
-    row.innerHTML = `
-      <div style="flex:1; min-width:180px">
-        <div class="muted"><b>Μέρος</b></div>
-        <input data-name type="text" value="${escHtml(name)}" />
-      </div>
-      <div style="width:140px">
-        <div class="muted"><b>Μονάδες</b></div>
-        <input data-points type="number" step="0.25" min="0" value="${points}" />
-      </div>
-      <div style="width:140px">
-        <div class="muted"><b>Ερωτήσεις</b></div>
-        <input data-q type="number" step="1" min="0" value="${q}" />
-      </div>
-      <button class="btn ghost" data-del type="button">✕</button>
-    `;
-
-    row.querySelector("[data-del]").addEventListener("click", () => {
-      row.remove();
-    });
-
-    EX.partsWrap.appendChild(row);
-  }
-
-  async function loadManifestToGradeSelect(){
-    if (!EX.gradeSelect) return;
+  async function loadScope(){
+    // γεμίζει Τεύχος/Κεφάλαιο από /v2/content/scope?grade=G_LYKEIO_MATH_KAT
     try{
-      const res = await fetch(`${BASE_URL}/v2/content/manifest`);
-      const m = await res.json();
-      const grades = Array.isArray(m.grades) ? m.grades : [];
-      EX.gradeSelect.innerHTML = "";
-      for(const g of grades){
+      const res = await fetch(`${BASE_URL}/v2/content/scope?grade=${encodeURIComponent(EX_GRADE)}`);
+      const data = await res.json();
+
+      const books = Array.isArray(data.books) ? data.books : [];
+      EX.book.innerHTML = "";
+      books.forEach(b => {
         const opt = document.createElement("option");
-        opt.value = g.key || "";
-        opt.textContent = g.title || g.key || "grade";
-        EX.gradeSelect.appendChild(opt);
+        opt.value = b.book_id;
+        opt.textContent = b.title || b.book_id;
+        EX.book.appendChild(opt);
+      });
+
+      function fillChapters(){
+        const bookId = EX.book.value;
+        const book = books.find(x => x.book_id === bookId);
+        const chapters = book?.chapters || [];
+        EX.chapter.innerHTML = "";
+        chapters.forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c.chapter_id;
+          opt.textContent = `${c.chapter_id} • ${c.title}`;
+          EX.chapter.appendChild(opt);
+        });
       }
-    }catch(e){
-      // fallback: άφησέ το όπως είναι στο HTML
+
+      EX.book.addEventListener("change", () => { fillChapters(); exMsg(""); });
+      fillChapters();
+    } catch(e){
+      // αν fail, δεν σπάμε τίποτα
+      exMsg("⚠️ Δεν φόρτωσε scope (δες grade folder & endpoint).", false);
     }
   }
 
-  function wireExamUI(){
-    if (!ensureExamUI()) return;
+  function wireExam(){
+    if (!EX.scale || !EX.step || !EX.time || !EX.diff || !EX.parts) return;
 
-    // default step based on scale
-    const applySuggestedStep = () => {
-      const scale = Number(EX.scaleSelect.value);
-      const step = suggestedStep(scale);
-      EX.stepSelect.value = String(step);
-    };
+    // init defaults
+    const s = Number(EX.scale.value || 100);
+    EX.step.value = String(suggestedStep(s));
+    renderBloom(Number(EX.diff.value || 3));
+    resetParts();
 
-    EX.scaleSelect.addEventListener("change", () => {
-      applySuggestedStep();
-      setExamMsg("");
+    EX.scale.addEventListener("change", () => {
+      const scale = Number(EX.scale.value || 100);
+      EX.step.value = String(suggestedStep(scale));
+      resetParts();
+      exMsg("");
     });
 
-    EX.diffRange.addEventListener("input", () => {
-      const v = Number(EX.diffRange.value || 3);
-      if (EX.diffLabel) EX.diffLabel.textContent = DIFF_LABELS[v] || `${v}/5`;
-      if (EX.bloomBox) EX.bloomBox.textContent = bloomTextFromPreset(v);
-      setExamMsg("");
+    EX.step.addEventListener("change", () => { updateSumPill(); exMsg(""); });
+
+    EX.diff.addEventListener("input", () => {
+      renderBloom(Number(EX.diff.value || 3));
+      exMsg("");
     });
 
-    EX.validateBtn?.addEventListener("click", () => {
+    EX.addPart.addEventListener("click", () => {
+      addPart({name: makePartName(EX.parts.querySelectorAll(".part-row").length), points: 0, q: 0});
+      updateSumPill();
+    });
+
+    EX.resetParts.addEventListener("click", () => { resetParts(); exMsg(""); });
+
+    EX.toText.addEventListener("click", () => {
       const st = getExamState();
       const errs = validateExam(st);
-      if (errs.length){
-        setExamMsg("❌ " + errs[0], false);
-        appendToTextContext(`${addToolHeader("ΔΙΑΓΩΝΙΣΜΑ — Σφάλματα")}\n` + errs.map(e=>`- ${e}`).join("\n"));
-      }else{
-        setExamMsg("✅ ΟΚ — έτοιμο για παραγωγή.", true);
-      }
-    });
-
-    EX.pushBtn?.addEventListener("click", () => {
-      const st = getExamState();
-      const errs = validateExam(st);
-      if (errs.length){
-        setExamMsg("❌ Διόρθωσε πρώτα: " + errs[0], false);
-        return;
-      }
-      appendToTextContext(`${addToolHeader("ΔΙΑΓΩΝΙΣΜΑ — Ρυθμίσεις")}\n` + examPrompt(st));
-      setExamMsg("✅ Μπήκαν οι ρυθμίσεις στη Λεκτική απορία.", true);
+      if (errs.length){ exMsg("❌ " + errs[0], false); return; }
+      appendToTextContext(buildExamContext(st));
+      exMsg("✅ Πήγαν στη Λεκτική ως context.", true);
       textInput.focus();
     });
 
-    EX.genBtn?.addEventListener("click", async () => {
+    EX.gen.addEventListener("click", async () => {
       const st = getExamState();
       const errs = validateExam(st);
-      if (errs.length){
-        setExamMsg("❌ Διόρθωσε πρώτα: " + errs[0], false);
-        return;
-      }
-      // Στέλνουμε απευθείας στον AI prompt παραγωγής διαγωνίσματος
-      lastPromptSent = (currentLevel === "lyceum"
-        ? "Να λυθεί/γραφτεί με μαθηματικά επιπέδου Λυκείου. Απόφυγε πανεπιστημιακές μεθόδους.\n\n"
-        : "Μπορείς να χρησιμοποιήσεις τεχνικές πανεπιστημιακού επιπέδου.\n\n") + examPrompt(st);
+      if (errs.length){ exMsg("❌ " + errs[0], false); return; }
+
+      const prompt = buildExamContext(st) + "\n\nΠαρήγαγε το διαγώνισμα τώρα.";
+      lastPromptSent =
+        (currentLevel === "lyceum"
+          ? "Να γραφτεί με μαθηματικά επιπέδου Λυκείου. Απόφυγε πανεπιστημιακές μεθόδους.\n\n"
+          : "Μπορείς να χρησιμοποιήσεις τεχνικές πανεπιστημιακού επιπέδου, αλλά καθαρά.\n\n"
+        ) + prompt;
 
       await askAI(lastPromptSent);
-      setExamMsg("✅ Δημιουργήθηκε διαγώνισμα στην απάντηση.", true);
+      exMsg("✅ Δημιουργήθηκε διαγώνισμα στην απάντηση.", true);
     });
 
-    EX.addPartBtn?.addEventListener("click", () => {
-      const existing = EX.partsWrap.querySelectorAll("[data-part]").length;
-      const name = String.fromCharCode("Α".charCodeAt(0) + existing) + " Μέρος";
-      addExamPartRow({name, points: 0, q: 0});
-      setExamMsg("");
-    });
+    // update pill on inputs
+    EX.parts.addEventListener("input", () => updateSumPill());
+    updateSumPill();
 
-    // init defaults
-    applySuggestedStep();
-    const v = Number(EX.diffRange.value || 3);
-    if (EX.diffLabel) EX.diffLabel.textContent = DIFF_LABELS[v] || `${v}/5`;
-    if (EX.bloomBox) EX.bloomBox.textContent = bloomTextFromPreset(v);
-
-    // default parts if empty
-    if ((EX.partsWrap.querySelectorAll("[data-part]").length || 0) === 0){
-      addExamPartRow({name:"Α Μέρος", points: 10, q: 5});
-      addExamPartRow({name:"Β Μέρος", points: 10, q: 3});
-    }
+    // scope
+    loadScope();
   }
+
+  wireExam();
 
   /* ===================== INK MODAL ===================== */
   (function(){
@@ -1981,8 +2054,11 @@ ${scope}`
   updateMathPreview();
   updateMatrixPreview();
   updateSavedInfo();
-  loadManifestToGradeSelect();
-  wireExamUI();
+     resetImageUI();
+     updateMathPreview();
+     updateMatrixPreview();
+     updateSavedInfo();
+  
 </script>
 
 </body>
@@ -1990,3 +2066,4 @@ ${scope}`
 
 
   
+
