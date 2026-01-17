@@ -214,6 +214,29 @@
       color:#dc2626;
     }
 
+    /* ====== EXAM GENERATOR (BETA) styles ====== */
+    .exam-grid{display:grid;gap:10px}
+    @media(min-width:980px){ .exam-grid{grid-template-columns:1fr 1fr} }
+
+    .exam-cta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .pill-soft{display:inline-block;background:#eef2ff;color:#1e3a8a;border:1px solid #e5e7eb;padding:6px 10px;border-radius:999px;font-weight:900;font-size:.75rem}
+    .danger{color:#b91c1c;font-weight:900}
+    .ok{color:#065f46;font-weight:900}
+    .exam-parts{display:grid;gap:10px;margin-top:10px}
+    .part-row{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
+    .part-head{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+    .part-title{font-weight:950}
+    .small{font-size:.78rem;color:#64748b}
+    .inline3{display:grid;gap:8px;grid-template-columns:1fr 1fr 1fr;align-items:end}
+    @media(max-width:760px){ .inline3{grid-template-columns:1fr} }
+
+    .qpoints{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+    .qpoints input{width:92px}
+
+    .badge{display:inline-block;border:1px solid #e5e7eb;background:#fafafa;border-radius:999px;padding:6px 10px;font-weight:900;font-size:.75rem}
+    .bloom-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+    .tag{display:inline-block;background:#111827;color:#fff;border-radius:999px;padding:5px 10px;font-weight:900;font-size:.72rem}
+
     @media print{
       .toast, .kbd, .tool-tabs, .tools-header, .tool-panel, #open-ink-btn,
       #image-input, #check-image-btn, #remove-img-btn, #continue-box,
@@ -298,22 +321,24 @@
     </div>
   </div>
 
-  <!-- ===== TOOLS (RESTORED) ===== -->
+  <!-- ===== TOOLS + EXAMS (BETA tab appears only with ?beta=1) ===== -->
   <div class="card">
     <div class="tools-header">
       <div>
         <label>Εργαλεία</label>
         <div class="muted">Ό,τι φτιάχνεις εδώ μπαίνει σαν context στη Λεκτική απορία.</div>
       </div>
-      <div class="tool-tabs">
+      <div class="tool-tabs" id="tool-tabs">
         <button class="tool-tab active" data-tool="matrix" type="button">Πίνακες</button>
         <button class="tool-tab" data-tool="series" type="button">Σειρές</button>
         <button class="tool-tab" data-tool="stats" type="button">Στατιστική</button>
+        <button class="tool-tab" data-tool="exams" id="exam-tab-btn" type="button" style="display:none">Διαγωνίσματα (BETA)</button>
       </div>
     </div>
 
     <!-- ===== MATRICES ===== -->
     <div class="tool-panel active" id="tool-matrix">
+      <!-- (ίδιο όπως πριν) -->
       <div class="matrix-wide">
         <div class="mini-card">
           <div class="mini-title">Εισαγωγή πίνακα</div>
@@ -434,6 +459,111 @@
         </div>
       </div>
     </div>
+
+    <!-- ===== EXAMS (BETA) ===== -->
+    <div class="tool-panel" id="tool-exams">
+      <div class="mini-card">
+        <div class="mini-title">Δημιουργία Διαγωνίσματος (BETA)</div>
+        <div class="muted">
+          Δηλώνεις δομή (Μέρος Α/Β/Γ...), μονάδες, βήμα, χρόνο και ύλη. Το σύστημα ελέγχει το άθροισμα και φτιάχνει payload για AI.
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="exam-grid">
+          <div class="mini-card">
+            <div class="mini-title">Βασικές Ρυθμίσεις</div>
+
+            <div class="inline3">
+              <div>
+                <div class="muted"><b>Κλίμακα</b></div>
+                <select id="exam-scale">
+                  <option value="10">10/10</option>
+                  <option value="20">20/20</option>
+                  <option value="40">40/40</option>
+                  <option value="100" selected>100/100</option>
+                </select>
+              </div>
+
+              <div>
+                <div class="muted"><b>Min βήμα</b></div>
+                <select id="exam-step">
+                  <option value="0.25">0.25</option>
+                  <option value="0.5" selected>0.5 (προτεινόμενο)</option>
+                  <option value="1">1</option>
+                </select>
+              </div>
+
+              <div>
+                <div class="muted"><b>Χρόνος (λεπτά) *</b></div>
+                <input id="exam-time" type="number" placeholder="π.χ. 40, 60, 90" min="1" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <span class="badge">Δυσκολία:</span>
+              <input id="exam-difficulty" type="range" min="1" max="5" step="1" value="3" style="flex:1;min-width:200px">
+              <span class="badge" id="exam-diff-label">3/5</span>
+            </div>
+
+            <div class="small" id="exam-diff-mix">—</div>
+
+            <div class="divider"></div>
+
+            <div class="mini-title">Bloom (Recommended)</div>
+            <div class="bloom-tags" id="bloom-tags"></div>
+            <div class="small">Θα χρησιμοποιηθεί ως “οδηγός” για το μείγμα ερωτήσεων.</div>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-title">Ύλη (Κατεύθυνση)</div>
+            <div class="small">Φορτώνει από <span class="mono">/v2/content/scope?grade=G_LYKEIO_MATH_KAT</span></div>
+
+            <div style="margin-top:10px" class="inline3">
+              <div>
+                <div class="muted"><b>Τεύχος</b></div>
+                <select id="exam-book"></select>
+              </div>
+              <div>
+                <div class="muted"><b>Κεφάλαιο</b></div>
+                <select id="exam-chapter"></select>
+              </div>
+              <div>
+                <div class="muted"><b>Σελίδες (προαιρετικό)</b></div>
+                <input id="exam-pages" type="text" placeholder="π.χ. 12-18" />
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="mini-title">Δομή Διαγωνίσματος (Μέρη)</div>
+            <div class="small">Π.χ. Μέρος Α: 10 μονάδες, 5 ερωτήσεις (2 μον./ερώτηση)</div>
+
+            <div class="exam-cta" style="margin-top:8px">
+              <button class="btn primary" id="add-part-btn" type="button">➕ Πρόσθεσε Μέρος</button>
+              <button class="btn ghost" id="reset-parts-btn" type="button">↩️ Reset</button>
+              <span class="pill-soft" id="exam-sum-pill">Σύνολο: —</span>
+            </div>
+
+            <div id="exam-parts" class="exam-parts"></div>
+
+            <div class="divider"></div>
+
+            <div class="exam-cta">
+              <button class="btn dark" id="exam-to-text-btn" type="button">🧾 Στείλτο στη Λεκτική (ως context)</button>
+              <button class="btn primary" id="exam-generate-btn" type="button">⚙️ Δημιούργησε (BETA)</button>
+              <span class="small" id="exam-status"></span>
+            </div>
+
+            <div class="small">
+              * Στο BETA, η “Δημιούργησε” φτιάχνει payload & prompt. Στο επόμενο βήμα θα δένει με endpoint generate-exam.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <!-- ===== ANSWER (RESTORED + save/pdf/print) ===== -->
@@ -529,15 +659,17 @@
     </div>
   </div>
 </div>
-
 <script>
   /* ===================== SERVER ===================== */
+  // Αν το UI είναι σε άλλο domain από το FastAPI, βάλε εδώ το server URL σου.
+  // Π.χ. "https://math-ai-server.onrender.com"
   const BASE_URL = "https://math-ai-server.onrender.com";
 
   /* ===================== TOAST ===================== */
   const toast = document.getElementById("answer-toast");
   const toastGo = document.getElementById("toast-go");
   const answerCard = document.getElementById("answer-card");
+
   function showToast(){
     toast.style.display = "flex";
     clearTimeout(window.__toastTimer);
@@ -799,13 +931,12 @@
     await askAI(lastPromptSent);
   });
 
-  /* ✅ clear buttons (work) */
+  /* ✅ clear buttons */
   document.getElementById("clear-math-btn").addEventListener("click", async () => {
     mathInput.value = "";
     await updateMathPreview();
     mathInput.focus();
   });
-
   document.getElementById("clear-text-btn").addEventListener("click", () => {
     textInput.value = "";
     textInput.focus();
@@ -832,7 +963,7 @@
     setTimeout(() => showContinueBox(false), 800);
   });
 
-  /* ===================== SAVE / TXT / PDF / PRINT (RESTORED) ===================== */
+  /* ===================== SAVE / TXT / PDF / PRINT ===================== */
   const saveBtn = document.getElementById("save-answer-btn");
   const downloadBtn = document.getElementById("download-answer-btn");
   const pdfBtn = document.getElementById("pdf-answer-btn");
@@ -843,7 +974,6 @@
     const t = (lastAnswerText || "").toString().replace(/\r/g, "").trim();
     return t || "—";
   }
-
   function updateSavedInfo(){
     try{
       const at = localStorage.getItem("mathAI:lastAnswerAt");
@@ -858,7 +988,6 @@
       savedInfo.textContent = "Αποθήκευση: μη διαθέσιμη.";
     }
   }
-
   function saveAnswerNow(){
     const t = getAnswerTextRaw();
     try{
@@ -870,7 +999,6 @@
       alert("❌ Δεν μπόρεσα να αποθηκεύσω (ίσως private mode).");
     }
   }
-
   function downloadAnswerTxt(){
     const t = getAnswerTextRaw();
     const when = new Date();
@@ -886,7 +1014,6 @@
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 400);
   }
-
   function escHtml(s){
     return String(s)
       .replaceAll("&","&amp;")
@@ -895,7 +1022,6 @@
       .replaceAll('"',"&quot;")
       .replaceAll("'","&#039;");
   }
-
   function formatForPrint(rawText){
     const t = (rawText || "").replace(/\r/g,"");
     const parts = t.split("```");
@@ -913,7 +1039,6 @@
     }
     return html || "<p>—</p>";
   }
-
   function openPrintWindow({autoPrint=true, title="Απάντηση"} = {}){
     const raw = getAnswerTextRaw();
     const when = new Date().toLocaleString();
@@ -1000,7 +1125,6 @@
     `);
     w.document.close();
   }
-
   function printAnswer(){ openPrintWindow({autoPrint:true, title:"Εκτύπωση"}); }
   function exportPdf(){ openPrintWindow({autoPrint:true, title:"Export PDF"}); }
 
@@ -1067,14 +1191,16 @@
   const toolPanels = {
     matrix: document.getElementById("tool-matrix"),
     series: document.getElementById("tool-series"),
-    stats: document.getElementById("tool-stats")
+    stats: document.getElementById("tool-stats"),
+    exams: document.getElementById("tool-exams")
   };
+
   toolTabs.forEach(t => {
     t.addEventListener("click", () => {
       toolTabs.forEach(x => x.classList.remove("active"));
       t.classList.add("active");
-      Object.values(toolPanels).forEach(p => p.classList.remove("active"));
-      toolPanels[t.dataset.tool].classList.add("active");
+      Object.values(toolPanels).forEach(p => p?.classList.remove("active"));
+      toolPanels[t.dataset.tool]?.classList.add("active");
     });
   });
 
@@ -1284,7 +1410,305 @@
   document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
   document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
 
-  /* ===================== INK: 2 canvases + transfer (no duplicates) ===================== */
+  /* ===================== EXAMS (Generator) ===================== */
+  // Αυτό το κομμάτι δουλεύει μόνο αν έχεις βάλει τα αντίστοιχα HTML ids στο Μέρος 1.
+  const EX = {
+    gradeSelect: document.getElementById("exam-grade"),
+    scaleSelect: document.getElementById("exam-scale"),
+    minutesInput: document.getElementById("exam-minutes"),
+    stepSelect: document.getElementById("exam-step"),
+    diffRange: document.getElementById("exam-diff"),
+    diffLabel: document.getElementById("exam-diff-label"),
+    bloomBox: document.getElementById("exam-bloom"),
+    scopeInfo: document.getElementById("exam-scope-info"),
+    scopeInput: document.getElementById("exam-scope-text"),
+    partsWrap: document.getElementById("exam-parts"),
+    addPartBtn: document.getElementById("exam-add-part"),
+    validateBtn: document.getElementById("exam-validate"),
+    pushBtn: document.getElementById("exam-to-text"),
+    genBtn: document.getElementById("exam-generate"),
+    status: document.getElementById("exam-status")
+  };
+
+  const BLOOM_LEVELS = ["Remember","Understand","Apply","Analyze","Evaluate","Create"];
+  const BLOOM_PRESETS = {
+    1: [30, 35, 25, 8, 2, 0],
+    2: [20, 30, 30, 15, 4, 1],
+    3: [12, 25, 30, 20, 10, 3],
+    4: [8, 18, 28, 24, 15, 7],
+    5: [5, 12, 23, 27, 20, 13]
+  };
+  const DIFF_LABELS = {
+    1: "1/5 • Πολύ εύκολο",
+    2: "2/5 • Εύκολο",
+    3: "3/5 • Μέτριο",
+    4: "4/5 • Δύσκολο",
+    5: "5/5 • Πολύ δύσκολο"
+  };
+
+  function setExamMsg(msg="", ok=true){
+    if (!EX.status) return;
+    EX.status.textContent = msg;
+    EX.status.style.color = ok ? "#065f46" : "#dc2626";
+    EX.status.style.fontWeight = "900";
+  }
+
+  function suggestedStep(scale){
+    // Προτάσεις σύμφωνα με αυτά που είπες:
+    // 100/100: προτείνουμε 0.5 αλλά επιτρέπουμε 0.25
+    // 20/20: προτείνουμε 0.25
+    // 10/10: προτείνουμε 0.25
+    // 40/40: λογικά 0.5 (αλλά μπορεί να αλλάξει)
+    if (scale >= 100) return 0.5;
+    if (scale === 40) return 0.5;
+    return 0.25;
+  }
+
+  function roundToStep(x, step){
+    const k = Math.round(x / step);
+    return Math.max(0, k * step);
+  }
+
+  function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
+
+  function bloomTextFromPreset(level){
+    const p = BLOOM_PRESETS[level] || BLOOM_PRESETS[3];
+    const lines = BLOOM_LEVELS.map((name, i) => `${name}: ${p[i]}%`).join(" • ");
+    return `Πρόταση (Bloom mix): ${lines}`;
+  }
+
+  function ensureExamUI(){
+    // Αν δεν υπάρχουν τα elements, απλά μην πετάς errors.
+    return EX.scaleSelect && EX.minutesInput && EX.stepSelect && EX.partsWrap && EX.diffRange;
+  }
+
+  function getExamState(){
+    const scale = Number(EX.scaleSelect?.value || 100);
+    const minutes = Number(EX.minutesInput?.value || 0);
+    const step = Number(EX.stepSelect?.value || suggestedStep(scale));
+    const diff = Number(EX.diffRange?.value || 3);
+    const grade = (EX.gradeSelect?.value || "").trim();
+
+    const parts = [...EX.partsWrap?.querySelectorAll("[data-part]") || []].map(row => ({
+      name: row.querySelector("[data-name]")?.value?.trim() || "Μέρος",
+      points: Number(row.querySelector("[data-points]")?.value || 0),
+      q: Number(row.querySelector("[data-q]")?.value || 0)
+    }));
+
+    const scopeText = (EX.scopeInput?.value || "").trim();
+
+    return { grade, scale, minutes, step, diff, parts, scopeText };
+  }
+
+  function validateExam(state){
+    const errs = [];
+
+    if (!state.minutes || state.minutes <= 0) errs.push("Βάλε ωφέλιμο χρόνο (λεπτά).");
+    if (!state.scale || state.scale <= 0) errs.push("Βάλε κλίμακα (10/20/40/100).");
+    if (!state.step || state.step <= 0) errs.push("Βάλε ελάχιστο βήμα μονάδων (0.25 / 0.5 / 1).");
+
+    // Step sanity
+    if (![0.25,0.5,1].includes(state.step)) errs.push("Το βήμα πρέπει να είναι 0.25 ή 0.5 ή 1.");
+
+    if (!state.parts.length) errs.push("Βάλε τουλάχιστον 1 μέρος (π.χ. Α, Β).");
+
+    let s = 0;
+    for (const [i,p] of state.parts.entries()){
+      if (!p.name) errs.push(`Μέρος #${i+1}: λείπει όνομα.`);
+      if (!p.points || p.points <= 0) errs.push(`Μέρος "${p.name}": βάλε μονάδες > 0.`);
+      if (p.q && p.q > 0){
+        const per = p.points / p.q;
+        // δεν απαιτούμε να διαιρείται ακριβώς, αλλά προειδοποιούμε:
+        const perRounded = roundToStep(per, state.step);
+        if (Math.abs(perRounded - per) > 1e-9){
+          // ok, θα γίνει "μοίρασμα" στο prompt
+        }
+      }
+      // ελέγχουμε ότι points είναι πολλαπλάσιο του step (σε tolerance)
+      const m = p.points / state.step;
+      if (Math.abs(m - Math.round(m)) > 1e-9) errs.push(`Μέρος "${p.name}": οι μονάδες πρέπει να είναι πολλαπλάσιο του ${state.step}.`);
+      s += p.points;
+    }
+
+    const mTotal = s / state.step;
+    if (Math.abs(mTotal - Math.round(mTotal)) > 1e-9) errs.push(`Το άθροισμα μονάδων δεν “κάθεται” στο βήμα ${state.step}.`);
+
+    if (Math.abs(s - state.scale) > 1e-9) errs.push(`Το άθροισμα μονάδων (${s}) δεν ισούται με την κλίμακα (${state.scale}).`);
+
+    return errs;
+  }
+
+  function examPrompt(state){
+    const bloom = BLOOM_PRESETS[state.diff] || BLOOM_PRESETS[3];
+
+    const partsLines = state.parts.map(p => {
+      const qInfo = (p.q && p.q>0)
+        ? `• ${p.q} ερωτήσεις (μοίρασε τις μονάδες στο βήμα ${state.step}, ώστε να αθροίζουν ακριβώς ${p.points})`
+        : `• (ο εκπαιδευτικός θα επιλέξει αριθμό ερωτήσεων, κράτα το μέρος στα ${p.points})`;
+      return `- ${p.name}: ${p.points}/${state.scale} ${qInfo}`;
+    }).join("\n");
+
+    const bloomLine = BLOOM_LEVELS.map((n,i)=>`${n}=${bloom[i]}%`).join(", ");
+
+    const scope = state.scopeText
+      ? `\n\nΎλη/Περιορισμοί (όπως δήλωσε ο εκπαιδευτικός):\n${state.scopeText}\n` +
+        `\nΑν υπάρχουν σελίδες/ενότητες εκτός ύλης, ΜΗΝ τις χρησιμοποιήσεις.`
+      : "";
+
+    return (
+`Θέλω να δημιουργήσεις ΕΠΑΓΓΕΛΜΑΤΙΚΟ διαγώνισμα/τεστ μαθηματικών για Κύπρο (Λύκειο).
+Να είναι έτοιμο για εκτύπωση, με καθαρή δομή, κενά για απαντήσεις, και ΣΩΣΤΕΣ μονάδες.
+
+Ρυθμίσεις:
+- Κλίμακα: ${state.scale}/${state.scale}
+- Βήμα μονάδων: ${state.step} (π.χ. επιτρέπονται 0.25 ή 0.5)
+- Ωφέλιμος χρόνος: ${state.minutes} λεπτά
+- Δυσκολία: ${DIFF_LABELS[state.diff] || state.diff}/5
+- Προτεινόμενο Bloom mix: ${bloomLine}
+
+Δομή διαγωνίσματος (Μέρη / Μονάδες):
+${partsLines}
+
+Οδηγίες:
+- Δώσε τίτλο, οδηγίες προς μαθητές, και στο τέλος συνολικό άθροισμα μονάδων.
+- Βάλε ποικιλία θεμάτων σύμφωνα με Bloom mix.
+- Πρόσεχε να ταιριάζει ο χρόνος με την έκταση/δυσκολία.
+- Να μην βάζεις “πολλαπλής” αν δεν ζητηθεί. Προτίμησε κλασικές ερωτήσεις/υποερωτήματα.
+- ΜΗΝ δώσεις λύσεις εδώ. (Λύσεις θα ζητηθούν σε ξεχωριστό prompt.)
+${scope}`
+    );
+  }
+
+  function addExamPartRow({name="Α Μέρος", points=0, q=0} = {}){
+    if (!EX.partsWrap) return;
+    const row = document.createElement("div");
+    row.className = "row";
+    row.setAttribute("data-part","1");
+    row.style.alignItems = "end";
+
+    row.innerHTML = `
+      <div style="flex:1; min-width:180px">
+        <div class="muted"><b>Μέρος</b></div>
+        <input data-name type="text" value="${escHtml(name)}" />
+      </div>
+      <div style="width:140px">
+        <div class="muted"><b>Μονάδες</b></div>
+        <input data-points type="number" step="0.25" min="0" value="${points}" />
+      </div>
+      <div style="width:140px">
+        <div class="muted"><b>Ερωτήσεις</b></div>
+        <input data-q type="number" step="1" min="0" value="${q}" />
+      </div>
+      <button class="btn ghost" data-del type="button">✕</button>
+    `;
+
+    row.querySelector("[data-del]").addEventListener("click", () => {
+      row.remove();
+    });
+
+    EX.partsWrap.appendChild(row);
+  }
+
+  async function loadManifestToGradeSelect(){
+    if (!EX.gradeSelect) return;
+    try{
+      const res = await fetch(`${BASE_URL}/v2/content/manifest`);
+      const m = await res.json();
+      const grades = Array.isArray(m.grades) ? m.grades : [];
+      EX.gradeSelect.innerHTML = "";
+      for(const g of grades){
+        const opt = document.createElement("option");
+        opt.value = g.key || "";
+        opt.textContent = g.title || g.key || "grade";
+        EX.gradeSelect.appendChild(opt);
+      }
+    }catch(e){
+      // fallback: άφησέ το όπως είναι στο HTML
+    }
+  }
+
+  function wireExamUI(){
+    if (!ensureExamUI()) return;
+
+    // default step based on scale
+    const applySuggestedStep = () => {
+      const scale = Number(EX.scaleSelect.value);
+      const step = suggestedStep(scale);
+      EX.stepSelect.value = String(step);
+    };
+
+    EX.scaleSelect.addEventListener("change", () => {
+      applySuggestedStep();
+      setExamMsg("");
+    });
+
+    EX.diffRange.addEventListener("input", () => {
+      const v = Number(EX.diffRange.value || 3);
+      if (EX.diffLabel) EX.diffLabel.textContent = DIFF_LABELS[v] || `${v}/5`;
+      if (EX.bloomBox) EX.bloomBox.textContent = bloomTextFromPreset(v);
+      setExamMsg("");
+    });
+
+    EX.validateBtn?.addEventListener("click", () => {
+      const st = getExamState();
+      const errs = validateExam(st);
+      if (errs.length){
+        setExamMsg("❌ " + errs[0], false);
+        appendToTextContext(`${addToolHeader("ΔΙΑΓΩΝΙΣΜΑ — Σφάλματα")}\n` + errs.map(e=>`- ${e}`).join("\n"));
+      }else{
+        setExamMsg("✅ ΟΚ — έτοιμο για παραγωγή.", true);
+      }
+    });
+
+    EX.pushBtn?.addEventListener("click", () => {
+      const st = getExamState();
+      const errs = validateExam(st);
+      if (errs.length){
+        setExamMsg("❌ Διόρθωσε πρώτα: " + errs[0], false);
+        return;
+      }
+      appendToTextContext(`${addToolHeader("ΔΙΑΓΩΝΙΣΜΑ — Ρυθμίσεις")}\n` + examPrompt(st));
+      setExamMsg("✅ Μπήκαν οι ρυθμίσεις στη Λεκτική απορία.", true);
+      textInput.focus();
+    });
+
+    EX.genBtn?.addEventListener("click", async () => {
+      const st = getExamState();
+      const errs = validateExam(st);
+      if (errs.length){
+        setExamMsg("❌ Διόρθωσε πρώτα: " + errs[0], false);
+        return;
+      }
+      // Στέλνουμε απευθείας στον AI prompt παραγωγής διαγωνίσματος
+      lastPromptSent = (currentLevel === "lyceum"
+        ? "Να λυθεί/γραφτεί με μαθηματικά επιπέδου Λυκείου. Απόφυγε πανεπιστημιακές μεθόδους.\n\n"
+        : "Μπορείς να χρησιμοποιήσεις τεχνικές πανεπιστημιακού επιπέδου.\n\n") + examPrompt(st);
+
+      await askAI(lastPromptSent);
+      setExamMsg("✅ Δημιουργήθηκε διαγώνισμα στην απάντηση.", true);
+    });
+
+    EX.addPartBtn?.addEventListener("click", () => {
+      const existing = EX.partsWrap.querySelectorAll("[data-part]").length;
+      const name = String.fromCharCode("Α".charCodeAt(0) + existing) + " Μέρος";
+      addExamPartRow({name, points: 0, q: 0});
+      setExamMsg("");
+    });
+
+    // init defaults
+    applySuggestedStep();
+    const v = Number(EX.diffRange.value || 3);
+    if (EX.diffLabel) EX.diffLabel.textContent = DIFF_LABELS[v] || `${v}/5`;
+    if (EX.bloomBox) EX.bloomBox.textContent = bloomTextFromPreset(v);
+
+    // default parts if empty
+    if ((EX.partsWrap.querySelectorAll("[data-part]").length || 0) === 0){
+      addExamPartRow({name:"Α Μέρος", points: 10, q: 5});
+      addExamPartRow({name:"Β Μέρος", points: 10, q: 3});
+    }
+  }
+
+  /* ===================== INK MODAL ===================== */
   (function(){
     const $ = (id) => document.getElementById(id);
 
@@ -1482,7 +1906,7 @@
     function appendMathOnce(text){
       const toAdd = (text || "").trim();
       if(!toAdd) return false;
-      if(mathInput.value.includes(toAdd)) return false; // prevent duplicates
+      if(mathInput.value.includes(toAdd)) return false;
       const prefix = mathInput.value.trim() ? "\n" : "";
       mathInput.value = mathInput.value + prefix + toAdd;
       return true;
@@ -1491,7 +1915,7 @@
     function appendTextOnce(text){
       const toAdd = (text || "").trim();
       if(!toAdd) return false;
-      if(textInput.value.includes(toAdd)) return false; // prevent duplicates
+      if(textInput.value.includes(toAdd)) return false;
       const prefix = textInput.value.trim() ? "\n\n" : "";
       textInput.value = textInput.value + prefix + toAdd;
       return true;
@@ -1557,8 +1981,12 @@
   updateMathPreview();
   updateMatrixPreview();
   updateSavedInfo();
+  loadManifestToGradeSelect();
+  wireExamUI();
 </script>
 
 </body>
 </html>
 
+
+  
