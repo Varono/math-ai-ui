@@ -1760,15 +1760,129 @@
       const errs = validateExam(st);
       if (errs.length){ exMsg("❌ " + errs[0], false); return; }
 
-      const prompt = buildExamContext(st) + "\n\nΠαρήγαγε το διαγώνισμα τώρα.";
-      lastPromptSent =
-        (currentLevel === "lyceum"
-          ? "Να γραφτεί με μαθηματικά επιπέδου Λυκείου. Απόφυγε πανεπιστημιακές μεθόδους.\n\n"
-          : "Μπορείς να χρησιμοποιήσεις τεχνικές πανεπιστημιακού επιπέδου, αλλά καθαρά.\n\n"
-        ) + prompt;
+      // Μετατροπή σε payload για /v2/exam/generate
+      const numQuestions = sum(st.parts.map(p => p.q || 0));
+      if (numQuestions <= 0) {
+        exMsg("❌ Πρόσθεσε τουλάχιστον 1 ερώτηση στα μέρη.", false);
+        return;
+      }
 
-      await askAI(lastPromptSent);
-      exMsg("✅ Δημιουργήθηκε διαγώνισμα στην απάντηση.", true);
+      const preset = BLOOM_PRESETS[st.diff] || BLOOM_PRESETS[3];
+      const bloomWeights = {
+        remember: preset[0],
+        understand: preset[1],
+        apply: preset[2],
+        analyze: preset[3],
+        evaluate: preset[4],
+        create: preset[5]
+      };
+
+      // Difficulty weights: easy/medium/hard based on diff (1-5)
+      const diffWeights = {
+        1: {easy: 70, medium: 25, hard: 5},
+        2: {easy: 50, medium: 40, hard: 10},
+        3: {easy: 40, medium: 40, hard: 20},
+        4: {easy: 25, medium: 40, hard: 35},
+        5: {easy: 15, medium: 35, hard: 50}
+      };
+      const difficultyWeights = diffWeights[st.diff] || diffWeights[3];
+
+      // Parse pages if provided
+      const pageRanges = [];
+      if (st.pages) {
+        const parts = st.pages.split(',').map(p => p.trim());
+        for (const part of parts) {
+          if (part.includes('-')) {
+            const [from, to] = part.split('-').map(x => parseInt(x.trim()));
+            if (!isNaN(from) && !isNaN(to)) {
+              pageRanges.push({from: Math.min(from, to), to: Math.max(from, to)});
+            }
+          } else {
+            const page = parseInt(part.trim());
+            if (!isNaN(page)) {
+              pageRanges.push({from: page, to: page});
+            }
+          }
+        }
+      }
+
+      const sourceScope = {
+        book_id: st.book_id || null,
+        chapter_ids: st.chapter_id ? [st.chapter_id] : [],
+        pages: pageRanges,
+        strict_in_syllabus: true
+      };
+
+      const payload = {
+        grade: st.grade,
+        num_questions: numQuestions,
+        duration_minutes: st.time,
+        total_points: String(st.scale),
+        min_step: String(st.step),
+        difficulty_weights: difficultyWeights,
+        bloom_weights: bloomWeights,
+        recommended_preset: null,
+        source_scope: sourceScope,
+        include_solutions: true
+      };
+
+      exMsg("⏳ Δημιουργείται διαγώνισμα...", true);
+      setStatus("Το AI δημιουργεί διαγώνισμα…");
+      statusEl.classList.add("status-thinking");
+      answerEl.innerHTML = "Το AI δημιουργεί διαγώνισμα…";
+      await renderMathIn(answerEl);
+      showContinueBox(false);
+
+      try {
+        const res = await fetch(`${BASE_URL}/v2/exam/generate?beta=1`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({detail: `HTTP ${res.status}`}));
+          throw new Error(errorData.detail || `HTTP ${res.status}`);
+        }
+
+        const examData = await res.json();
+        
+        // Format exam for display
+        let examText = `=== ΔΙΑΓΩΝΙΣΜΑ ===\n\n`;
+        examText += `Τίτλος: ${examData.title || "Διαγώνισμα"}\n`;
+        examText += `Grade: ${examData.grade || st.grade}\n`;
+        examText += `Χρόνος: ${examData.duration_minutes || st.time} λεπτά\n`;
+        examText += `Κλίμακα: ${examData.total_points || st.scale}/${examData.total_points || st.scale}\n`;
+        examText += `Min βήμα: ${examData.min_step || st.step}\n\n`;
+
+        if (examData.questions && examData.questions.length > 0) {
+          examText += `=== ΕΡΩΤΗΣΕΙΣ ===\n\n`;
+          examData.questions.forEach((q, idx) => {
+            examText += `${q.id || `Q${idx+1}`} (${q.points || 0} μονάδες)\n`;
+            examText += `Δυσκολία: ${q.difficulty || "—"} | Bloom: ${q.bloom || "—"}\n`;
+            examText += `${q.statement || q.prompt || ""}\n`;
+            if (q.solution && examData.include_solutions) {
+              examText += `\nΛύση:\n${q.solution}\n`;
+            }
+            examText += `\n---\n\n`;
+          });
+        }
+
+        if (examData.scope_report) {
+          examText += `\n=== SCOPE REPORT ===\n`;
+          examText += `Χρησιμοποιήθηκε: ${examData.scope_report.used_book_id || "—"}\n`;
+          examText += `Κεφάλαια: ${(examData.scope_report.used_chapter_ids || []).join(", ") || "—"}\n`;
+        }
+
+        await renderAnswer(examText);
+        exMsg("✅ Δημιουργήθηκε διαγώνισμα!", true);
+      } catch(e) {
+        await renderAnswer(`Σφάλμα: ${e.message || "Δεν μπόρεσε να δημιουργηθεί το διαγώνισμα."}`);
+        exMsg("❌ Σφάλμα: " + (e.message || "Δεν μπόρεσε να δημιουργηθεί."), false);
+      }
+
+      setStatus("");
+      statusEl.classList.remove("status-thinking");
     });
 
     // update pill on inputs
