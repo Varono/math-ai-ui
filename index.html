@@ -94,6 +94,25 @@
     .tool-panel{display:none;margin-top:10px}
     .tool-panel.active{display:block}
 
+    .geogebra-section{margin-top:10px}
+    .geogebra-panel{display:flex;flex-direction:column;gap:8px}
+    .geogebra-bar{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      padding:8px 10px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa
+    }
+    .geogebra-title{font-weight:950;color:#0f172a}
+    .geogebra-fullbleed{
+      width:100vw;
+      margin-left:-12px;
+      margin-right:0;
+    }
+    .geogebra-canvas{
+      width:100%;height:calc(100vh - 190px);min-height:740px;
+      border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff
+    }
+    .geogebra-canvas.is-hidden{display:none}
+    .geogebra-open-btn.active{background:#dc2626;color:#fff}
+
     .mini-card{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fafafa;height:100%}
     .mini-title{font-weight:950;font-size:.86rem;margin-bottom:8px;color:#0f172a}
     .result-box{border:1px dashed #cbd5e1;border-radius:12px;padding:8px 10px;background:#fff;min-height:52px}
@@ -214,16 +233,6 @@
       color:#dc2626;
     }
 
-    /* ====== EXAM GENERATOR (BETA) styles ====== */
-    .exam-grid{display:grid;gap:10px}
-    @media(min-width:980px){ .exam-grid{grid-template-columns:1fr 1fr} }
-
-    .exam-cta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .pill-soft{display:inline-block;background:#eef2ff;color:#1e3a8a;border:1px solid #e5e7eb;padding:6px 10px;border-radius:999px;font-weight:900;font-size:.75rem}
-    .danger{color:#b91c1c;font-weight:900}
-    .ok{color:#065f46;font-weight:900}
-    .exam-parts{display:grid;gap:10px;margin-top:10px}
-    .part-row{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
     .part-head{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
     .part-title{font-weight:950}
     .small{font-size:.78rem;color:#64748b}
@@ -321,7 +330,7 @@
     </div>
   </div>
 
-  <!-- ===== TOOLS + EXAMS (BETA tab appears only with ?beta=1) ===== -->
+  <!-- ===== TOOLS ===== -->
   <div class="card">
     <div class="tools-header">
       <div>
@@ -332,7 +341,6 @@
         <button class="tool-tab active" data-tool="matrix" type="button">Πίνακες</button>
         <button class="tool-tab" data-tool="series" type="button">Σειρές</button>
         <button class="tool-tab" data-tool="stats" type="button">Στατιστική</button>
-        <button class="tool-tab" data-tool="exams" id="exam-tab-btn" type="button" style="display:none">Διαγωνίσματα (BETA)</button>
       </div>
     </div>
 
@@ -386,7 +394,6 @@
           <div class="row">
             <button class="btn ghost" id="dynsys-btn" type="button">Δυναμικό</button>
             <button class="btn ghost" id="ode-btn" type="button">Δ.Ε.</button>
-            <button class="btn ghost" id="exam-summary-btn" type="button">🧠 Σύνοψη</button>
           </div>
         </div>
       </div>
@@ -460,107 +467,23 @@
       </div>
     </div>
 
-    <!-- ===== EXAMS (BETA) ===== -->
-    <div class="tool-panel" id="tool-exams">
-      <div class="mini-card">
-        <div class="mini-title">Δημιουργία Διαγωνίσματος (BETA)</div>
-        <div class="muted">
-          Δηλώνεις δομή (Μέρος Α/Β/Γ...), μονάδες, βήμα, χρόνο και ύλη. Το σύστημα ελέγχει το άθροισμα και φτιάχνει payload για AI.
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="exam-grid">
-          <div class="mini-card">
-            <div class="mini-title">Βασικές Ρυθμίσεις</div>
-
-            <div class="inline3">
-              <div>
-                <div class="muted"><b>Κλίμακα</b></div>
-                <select id="exam-scale">
-                  <option value="10">10/10</option>
-                  <option value="20">20/20</option>
-                  <option value="40">40/40</option>
-                  <option value="100" selected>100/100</option>
-                </select>
-              </div>
-
-              <div>
-                <div class="muted"><b>Min βήμα</b></div>
-                <select id="exam-step">
-                  <option value="0.25">0.25</option>
-                  <option value="0.5" selected>0.5 (προτεινόμενο)</option>
-                  <option value="1">1</option>
-                </select>
-              </div>
-
-              <div>
-                <div class="muted"><b>Χρόνος (λεπτά) *</b></div>
-                <input id="exam-time" type="number" placeholder="π.χ. 40, 60, 90" min="1" />
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:10px">
-              <span class="badge">Δυσκολία:</span>
-              <input id="exam-difficulty" type="range" min="1" max="5" step="1" value="3" style="flex:1;min-width:200px">
-              <span class="badge" id="exam-diff-label">3/5</span>
-            </div>
-
-            <div class="small" id="exam-diff-mix">—</div>
-
-            <div class="divider"></div>
-
-            <div class="mini-title">Bloom (Recommended)</div>
-            <div class="bloom-tags" id="bloom-tags"></div>
-            <div class="small">Θα χρησιμοποιηθεί ως “οδηγός” για το μείγμα ερωτήσεων.</div>
-          </div>
-
-          <div class="mini-card">
-            <div class="mini-title">Ύλη (Κατεύθυνση)</div>
-            <div class="small">Φορτώνει από <span class="mono">/v2/content/scope?grade=G_LYKEIO_MATH_KAT</span></div>
-
-            <div style="margin-top:10px" class="inline3">
-              <div>
-                <div class="muted"><b>Τεύχος</b></div>
-                <select id="exam-book"></select>
-              </div>
-              <div>
-                <div class="muted"><b>Κεφάλαιο</b></div>
-                <select id="exam-chapter"></select>
-              </div>
-              <div>
-                <div class="muted"><b>Σελίδες (προαιρετικό)</b></div>
-                <input id="exam-pages" type="text" placeholder="π.χ. 12-18" />
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="mini-title">Δομή Διαγωνίσματος (Μέρη)</div>
-            <div class="small">Π.χ. Μέρος Α: 10 μονάδες, 5 ερωτήσεις (2 μον./ερώτηση)</div>
-
-            <div class="exam-cta" style="margin-top:8px">
-              <button class="btn primary" id="add-part-btn" type="button">➕ Πρόσθεσε Μέρος</button>
-              <button class="btn ghost" id="reset-parts-btn" type="button">↩️ Reset</button>
-              <span class="pill-soft" id="exam-sum-pill">Σύνολο: —</span>
-            </div>
-
-            <div id="exam-parts" class="exam-parts"></div>
-
-            <div class="divider"></div>
-
-            <div class="exam-cta">
-              <button class="btn dark" id="exam-to-text-btn" type="button">🧾 Στείλτο στη Λεκτική (ως context)</button>
-              <button class="btn primary" id="exam-generate-btn" type="button">⚙️ Δημιούργησε (BETA)</button>
-              <span class="small" id="exam-status"></span>
-            </div>
-
-            <div class="small">
-              * Στο BETA, η “Δημιούργησε” φτιάχνει payload & prompt. Στο επόμενο βήμα θα δένει με endpoint generate-exam.
-            </div>
+    <!-- ===== GEOGEBRA ===== -->
+    <div class="geogebra-section" id="tool-geogebra">
+      <div class="geogebra-panel">
+        <div class="geogebra-bar geogebra-fullbleed">
+          <button class="btn dark geogebra-open-btn" id="geogebra-open-btn" type="button">GeoGebra</button>
+          <div class="row" style="gap:12px;align-items:center">
+            <label class="row" style="gap:8px;align-items:center">
+              <input type="checkbox" id="geogebra-axes-toggle" checked />
+              <span class="muted"><b>Άξονες</b></span>
+            </label>
+            <label class="row" style="gap:8px;align-items:center">
+              <input type="checkbox" id="geogebra-grid-toggle" checked />
+              <span class="muted"><b>Πλέγμα</b></span>
+            </label>
           </div>
         </div>
-
+        <div id="geogebra-container" class="geogebra-canvas geogebra-fullbleed is-hidden"></div>
       </div>
     </div>
 
@@ -659,6 +582,7 @@
     </div>
   </div>
 </div>
+<script src="https://www.geogebra.org/apps/deployggb.js"></script>
 <script>
   /* ===================== SERVER ===================== */
   // Αν το UI είναι σε άλλο domain από το FastAPI, βάλε εδώ το server URL σου.
@@ -1191,8 +1115,7 @@
   const toolPanels = {
     matrix: document.getElementById("tool-matrix"),
     series: document.getElementById("tool-series"),
-    stats: document.getElementById("tool-stats"),
-    exams: document.getElementById("tool-exams")
+    stats: document.getElementById("tool-stats")
   };
 
   toolTabs.forEach(t => {
@@ -1203,6 +1126,93 @@
       toolPanels[t.dataset.tool]?.classList.add("active");
     });
   });
+
+  /* ===================== GEOGEBRA ===================== */
+  const ggbAxesToggle = document.getElementById("geogebra-axes-toggle");
+  const ggbGridToggle = document.getElementById("geogebra-grid-toggle");
+  const ggbOpenBtn = document.getElementById("geogebra-open-btn");
+  const ggbContainerId = "geogebra-container";
+  const ggbContainerEl = document.getElementById(ggbContainerId);
+  let ggbInitialized = false;
+
+  function applyGgbAxesVisibility(){
+    if (!window.ggbApplet) return;
+    const showAxes = ggbAxesToggle ? ggbAxesToggle.checked : true;
+    try {
+      window.ggbApplet.setAxesVisible(showAxes, showAxes);
+    } catch (e) {
+      // ignore if applet not ready yet
+    }
+  }
+
+  function applyGgbGridVisibility(){
+    if (!window.ggbApplet) return;
+    const showGrid = ggbGridToggle ? ggbGridToggle.checked : true;
+    try {
+      window.ggbApplet.setGridVisible(showGrid);
+    } catch (e) {
+      // ignore if applet not ready yet
+    }
+  }
+
+  function resizeGeoGebra(){
+    const container = document.getElementById(ggbContainerId);
+    if (!container || !window.ggbApplet) return;
+    const width = Math.max(window.innerWidth || 0, 600);
+    const height = Math.max(container.getBoundingClientRect().height || 0, 500);
+    if (typeof window.ggbApplet.setWidth === "function") window.ggbApplet.setWidth(width);
+    if (typeof window.ggbApplet.setHeight === "function") window.ggbApplet.setHeight(height);
+  }
+
+  window.ggbOnInit = function(){
+    applyGgbAxesVisibility();
+    applyGgbGridVisibility();
+    resizeGeoGebra();
+  };
+
+  function initGeoGebra(){
+    if (typeof GGBApplet === "undefined") return;
+    const container = ggbContainerEl;
+    const width = Math.max(window.innerWidth || 0, 600);
+    const height = Math.max(container?.getBoundingClientRect().height || 0, 800);
+    const params = {
+      id: "ggbApplet",
+      appName: "classic",
+      width,
+      height,
+      showToolBar: true,
+      showAlgebraInput: true,
+      showMenuBar: true,
+      showResetIcon: true
+    };
+    const applet = new GGBApplet(params, true);
+    applet.inject(ggbContainerId);
+    ggbInitialized = true;
+  }
+
+  if (ggbAxesToggle){
+    ggbAxesToggle.addEventListener("change", applyGgbAxesVisibility);
+  }
+  if (ggbGridToggle){
+    ggbGridToggle.addEventListener("change", applyGgbGridVisibility);
+  }
+  function setGeoGebraVisible(show){
+    if (!ggbContainerEl) return;
+    ggbContainerEl.classList.toggle("is-hidden", !show);
+    if (ggbOpenBtn) ggbOpenBtn.classList.toggle("active", show);
+    if (show){
+      if (!ggbInitialized) initGeoGebra();
+      setTimeout(() => { resizeGeoGebra(); applyGgbAxesVisibility(); applyGgbGridVisibility(); }, 50);
+    }
+  }
+
+  if (ggbOpenBtn){
+    ggbOpenBtn.addEventListener("click", () => {
+      const isHidden = ggbContainerEl?.classList.contains("is-hidden");
+      setGeoGebraVisible(Boolean(isHidden));
+    });
+  }
+  window.addEventListener("resize", resizeGeoGebra);
 
   /* ===================== MATRICES ===================== */
   const matrixRaw = document.getElementById("matrix-raw");
@@ -1300,7 +1310,6 @@
   document.getElementById("eA-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΠΙΝΑΚΕΣ")}\nΔίνεται A=${lastMatrixLatex}\nΥπολόγισε e^A.`); textInput.focus(); });
   document.getElementById("dynsys-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx_{k+1}=Ax_k με A=${lastMatrixLatex}.`); textInput.focus(); });
   document.getElementById("ode-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx'(t)=Ax(t) με A=${lastMatrixLatex}.`); textInput.focus(); });
-  document.getElementById("exam-summary-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(diagonalizationChecklist()); textInput.focus(); });
 
   /* ===================== SERIES ===================== */
   const seriesFrom = document.getElementById("series-from");
@@ -1409,491 +1418,6 @@
   document.getElementById("stats-ci-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Διάστημα Εμπιστοσύνης: δώσε επίπεδο (π.χ. 95%), n, σ γνωστή/άγνωστη.`); textInput.focus(); });
   document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
   document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
-
-  
-    /* ===================== EXAMS (Generator) ===================== */
-  // ✅ ΣΥΝΔΕΕΤΑΙ ΜΕ ΤΑ IDs ΤΟΥ ΔΙΚΟΥ ΣΟΥ HTML (exam-time, add-part-btn, κλπ)
-
-  // Show BETA tab only with ?beta=1
-  (function(){
-    const beta = new URLSearchParams(location.search).get("beta");
-    const tabBtn = document.getElementById("exam-tab-btn");
-    if (tabBtn && beta === "1") tabBtn.style.display = "";
-  })();
-
-  const EX = {
-    scale: document.getElementById("exam-scale"),
-    step: document.getElementById("exam-step"),
-    time: document.getElementById("exam-time"),
-    diff: document.getElementById("exam-difficulty"),
-    diffLabel: document.getElementById("exam-diff-label"),
-    diffMix: document.getElementById("exam-diff-mix"),
-    bloomTags: document.getElementById("bloom-tags"),
-
-    book: document.getElementById("exam-book"),
-    chapter: document.getElementById("exam-chapter"),
-    pages: document.getElementById("exam-pages"),
-
-    parts: document.getElementById("exam-parts"),
-    sumPill: document.getElementById("exam-sum-pill"),
-    addPart: document.getElementById("add-part-btn"),
-    resetParts: document.getElementById("reset-parts-btn"),
-
-    toText: document.getElementById("exam-to-text-btn"),
-    gen: document.getElementById("exam-generate-btn"),
-    status: document.getElementById("exam-status"),
-  };
-
-  const EX_GRADE = "G_LYKEIO_MATH_KAT";
-
-  const BLOOM = [
-    {key:"remember", label:"Θυμάμαι"},
-    {key:"understand", label:"Κατανοώ"},
-    {key:"apply", label:"Εφαρμόζω"},
-    {key:"analyze", label:"Αναλύω"},
-    {key:"evaluate", label:"Αξιολογώ"},
-    {key:"create", label:"Δημιουργώ"},
-  ];
-
-  // Recommended distributions (σε %), ανά δυσκολία 1..5
-  const BLOOM_PRESETS = {
-    1: [30, 35, 25,  8,  2,  0],
-    2: [20, 30, 30, 15,  4,  1],
-    3: [12, 25, 30, 20, 10,  3],
-    4: [ 8, 18, 28, 24, 15,  7],
-    5: [ 5, 12, 23, 27, 20, 13],
-  };
-
-  const DIFF_TEXT = {
-    1: "1/5 • Πολύ εύκολο",
-    2: "2/5 • Εύκολο",
-    3: "3/5 • Μέτριο",
-    4: "4/5 • Δύσκολο",
-    5: "5/5 • Πολύ δύσκολο",
-  };
-
-  function exMsg(msg="", ok=true){
-    if(!EX.status) return;
-    EX.status.textContent = msg;
-    EX.status.style.color = ok ? "#065f46" : "#dc2626";
-    EX.status.style.fontWeight = "900";
-  }
-
-  function suggestedStep(scale){
-    if (scale === 100) return 0.5;
-    if (scale === 40) return 0.5;
-    return 0.25; // 10/20
-  }
-
-  function isMultipleOfStep(x, step){
-    const k = x / step;
-    return Math.abs(k - Math.round(k)) < 1e-9;
-  }
-
-  function sum(arr){ return arr.reduce((a,b)=>a+b,0); }
-
-  function renderBloom(diff){
-    const p = BLOOM_PRESETS[diff] || BLOOM_PRESETS[3];
-    EX.bloomTags.innerHTML = "";
-    BLOOM.forEach((b, i) => {
-      const s = document.createElement("span");
-      s.className = "tag";
-      s.textContent = `${b.label} ${p[i]}%`;
-      EX.bloomTags.appendChild(s);
-    });
-    EX.diffLabel.textContent = DIFF_TEXT[diff] || `${diff}/5`;
-    EX.diffMix.textContent =
-      `Πρόταση μείγματος: ${p[0]}% Θυμάμαι • ${p[1]}% Κατανοώ • ${p[2]}% Εφαρμόζω • ${p[3]}% Αναλύω • ${p[4]}% Αξιολογώ • ${p[5]}% Δημιουργώ`;
-  }
-
-  function updateSumPill(){
-    const scale = Number(EX.scale.value || 100);
-    const step = Number(EX.step.value || 0.5);
-    const parts = [...EX.parts.querySelectorAll(".part-row")];
-    const pts = parts.map(r => Number(r.querySelector('[data-points]').value || 0));
-    const total = sum(pts);
-
-    let txt = `Σύνολο: ${total}/${scale}`;
-    let ok = true;
-
-    if (!isMultipleOfStep(total, step)) { ok = false; txt += ` • ⚠ όχι πολλαπλάσιο του ${step}`; }
-    if (Math.abs(total - scale) > 1e-9) { ok = false; txt += ` • ⚠ δεν ισούται με κλίμακα`; }
-
-    EX.sumPill.textContent = txt;
-    EX.sumPill.style.color = ok ? "#065f46" : "#b91c1c";
-    return {total, ok};
-  }
-
-  function makePartName(idx){
-    // Α, Β, Γ, Δ, Ε...
-    const letters = ["Α","Β","Γ","Δ","Ε","Ζ","Η","Θ","Ι","Κ","Λ","Μ"];
-    return (letters[idx] || `Μ${idx+1}`) + " Μέρος";
-  }
-
-  function addPart({name, points, q} = {}){
-    const idx = EX.parts.querySelectorAll(".part-row").length;
-    const row = document.createElement("div");
-    row.className = "part-row";
-    row.innerHTML = `
-      <div class="part-head">
-        <div class="part-title">${(name || makePartName(idx)).replace(/</g,"&lt;")}</div>
-        <button class="btn ghost" type="button" data-del>✕ Αφαίρεση</button>
-      </div>
-
-      <div class="inline3" style="margin-top:8px">
-        <div>
-          <div class="muted"><b>Όνομα μέρους</b></div>
-          <input type="text" data-name value="${(name || makePartName(idx)).replace(/"/g,"&quot;")}" />
-        </div>
-        <div>
-          <div class="muted"><b>Μονάδες μέρους</b></div>
-          <input type="number" data-points min="0" step="0.25" value="${Number(points||0)}" />
-        </div>
-        <div>
-          <div class="muted"><b>Ερωτήσεις</b></div>
-          <input type="number" data-q min="0" step="1" value="${Number(q||0)}" />
-        </div>
-      </div>
-
-      <div class="small" data-hint style="margin-top:6px"></div>
-    `;
-
-    const del = row.querySelector("[data-del]");
-    const inName = row.querySelector("[data-name]");
-    const inPts  = row.querySelector("[data-points]");
-    const inQ    = row.querySelector("[data-q]");
-    const hint   = row.querySelector("[data-hint]");
-
-    function refresh(){
-      const scale = Number(EX.scale.value || 100);
-      const step = Number(EX.step.value || 0.5);
-      const pts = Number(inPts.value || 0);
-      const q = Number(inQ.value || 0);
-
-      // enforce step
-      if (pts && !isMultipleOfStep(pts, step)){
-        hint.innerHTML = `<span class="danger">⚠ Οι μονάδες πρέπει να είναι πολλαπλάσιο του ${step}.</span>`;
-      } else {
-        hint.textContent = "";
-      }
-
-      if (q > 0 && pts > 0){
-        const per = pts / q;
-        hint.textContent = `≈ ${per.toFixed(3)} μον./ερώτηση (θα μοιραστεί στο βήμα ${step})`;
-      }
-
-      updateSumPill();
-      exMsg("");
-    }
-
-    del.addEventListener("click", () => { row.remove(); updateSumPill(); exMsg(""); });
-    [inName, inPts, inQ].forEach(el => el.addEventListener("input", refresh));
-    EX.parts.appendChild(row);
-    refresh();
-  }
-
-  function resetParts(){
-    EX.parts.innerHTML = "";
-    const scale = Number(EX.scale.value || 100);
-    // default: 2 μέρη που “κάθονται” στην κλίμακα
-    if (scale === 20){
-      addPart({name:"Α Μέρος", points:10, q:5});
-      addPart({name:"Β Μέρος", points:10, q:3});
-    } else if (scale === 10){
-      addPart({name:"Α Μέρος", points:5, q:3});
-      addPart({name:"Β Μέρος", points:5, q:2});
-    } else if (scale === 40){
-      addPart({name:"Α Μέρος", points:20, q:6});
-      addPart({name:"Β Μέρος", points:20, q:4});
-    } else {
-      addPart({name:"Α Μέρος", points:40, q:8});
-      addPart({name:"Β Μέρος", points:60, q:6});
-    }
-    updateSumPill();
-  }
-
-  function getExamState(){
-    const scale = Number(EX.scale.value || 100);
-    const step = Number(EX.step.value || 0.5);
-    const time = Number(EX.time.value || 0);
-    const diff = Number(EX.diff.value || 3);
-    const book_id = EX.book.value || "";
-    const chapter_id = EX.chapter.value || "";
-    const pages = (EX.pages.value || "").trim();
-
-    const parts = [...EX.parts.querySelectorAll(".part-row")].map(r => ({
-      name: (r.querySelector("[data-name]").value || "").trim(),
-      points: Number(r.querySelector("[data-points]").value || 0),
-      q: Number(r.querySelector("[data-q]").value || 0),
-    }));
-
-    return { grade: EX_GRADE, scale, step, time, diff, book_id, chapter_id, pages, parts };
-  }
-
-  function validateExam(st){
-    const errs = [];
-    if (!st.time || st.time <= 0) errs.push("Βάλε ωφέλιμο χρόνο (λεπτά).");
-    if (!st.parts.length) errs.push("Πρόσθεσε τουλάχιστον 1 μέρος.");
-    if (![0.25,0.5,1].includes(st.step)) errs.push("Το min βήμα πρέπει να είναι 0.25 ή 0.5 ή 1.");
-
-    const total = sum(st.parts.map(p => p.points));
-    if (Math.abs(total - st.scale) > 1e-9) errs.push(`Το άθροισμα μονάδων (${total}) δεν ισούται με κλίμακα (${st.scale}).`);
-
-    for (const p of st.parts){
-      if (!p.name) errs.push("Κάποιο μέρος δεν έχει όνομα.");
-      if (!p.points || p.points <= 0) errs.push(`Το μέρος "${p.name || "?"}" πρέπει να έχει μονάδες > 0.`);
-      if (!isMultipleOfStep(p.points, st.step)) errs.push(`Το μέρος "${p.name}" πρέπει να έχει μονάδες πολλαπλάσιο του ${st.step}.`);
-      if (p.q < 0) errs.push(`Το μέρος "${p.name}" έχει άκυρο αριθμό ερωτήσεων.`);
-    }
-    return errs;
-  }
-
-  function buildExamContext(st){
-    const preset = BLOOM_PRESETS[st.diff] || BLOOM_PRESETS[3];
-    const bloomLine = BLOOM.map((b,i)=>`${b.label}:${preset[i]}%`).join(" • ");
-    const partsLine = st.parts.map(p => {
-      const per = (p.q>0 && p.points>0) ? (p.points/p.q) : null;
-      return `- ${p.name}: ${p.points}/${st.scale}` + (per ? ` (≈ ${per.toFixed(3)} μον./ερώτηση, ${p.q} ερωτ.)` : "");
-    }).join("\n");
-
-    const scopeLine =
-      `Ύλη (source: scope.json):\n` +
-      `- Τεύχος: ${st.book_id || "—"}\n` +
-      `- Κεφάλαιο: ${st.chapter_id || "—"}\n` +
-      (st.pages ? `- Σελίδες: ${st.pages}\n` : "");
-
-    return (
-      `=== ΔΙΑΓΩΝΙΣΜΑ — ΡΥΘΜΙΣΕΙΣ ===\n` +
-      `Grade: ${st.grade}\n` +
-      `Κλίμακα: ${st.scale}/${st.scale}\n` +
-      `Min βήμα: ${st.step}\n` +
-      `Χρόνος: ${st.time} λεπτά\n` +
-      `Δυσκολία: ${DIFF_TEXT[st.diff] || st.diff}\n` +
-      `Bloom (recommended): ${bloomLine}\n\n` +
-      `${scopeLine}\n` +
-      `Δομή:\n${partsLine}\n\n` +
-      `Οδηγίες:\n` +
-      `- Να παραχθεί διαγώνισμα έτοιμο για εκτύπωση.\n` +
-      `- Να τηρηθούν αυστηρά οι μονάδες και η κλίμακα.\n` +
-      `- Να γίνει ποικιλία σύμφωνα με Bloom.\n` +
-      `- Να ΜΗΝ χρησιμοποιηθούν σελίδες/ενότητες εκτός ύλης.\n`
-    );
-  }
-
-  async function loadScope(){
-    // γεμίζει Τεύχος/Κεφάλαιο από /v2/content/scope?grade=G_LYKEIO_MATH_KAT
-    try{
-      const res = await fetch(`${BASE_URL}/v2/content/scope?grade=${encodeURIComponent(EX_GRADE)}`);
-      const data = await res.json();
-
-      const books = Array.isArray(data.books) ? data.books : [];
-      EX.book.innerHTML = "";
-      books.forEach(b => {
-        const opt = document.createElement("option");
-        opt.value = b.book_id;
-        opt.textContent = b.title || b.book_id;
-        EX.book.appendChild(opt);
-      });
-
-      function fillChapters(){
-        const bookId = EX.book.value;
-        const book = books.find(x => x.book_id === bookId);
-        const chapters = book?.chapters || [];
-        EX.chapter.innerHTML = "";
-        chapters.forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c.chapter_id;
-          opt.textContent = `${c.chapter_id} • ${c.title}`;
-          EX.chapter.appendChild(opt);
-        });
-      }
-
-      EX.book.addEventListener("change", () => { fillChapters(); exMsg(""); });
-      fillChapters();
-    } catch(e){
-      // αν fail, δεν σπάμε τίποτα
-      exMsg("⚠️ Δεν φόρτωσε scope (δες grade folder & endpoint).", false);
-    }
-  }
-
-  function wireExam(){
-    if (!EX.scale || !EX.step || !EX.time || !EX.diff || !EX.parts) return;
-
-    // init defaults
-    const s = Number(EX.scale.value || 100);
-    EX.step.value = String(suggestedStep(s));
-    renderBloom(Number(EX.diff.value || 3));
-    resetParts();
-
-    EX.scale.addEventListener("change", () => {
-      const scale = Number(EX.scale.value || 100);
-      EX.step.value = String(suggestedStep(scale));
-      resetParts();
-      exMsg("");
-    });
-
-    EX.step.addEventListener("change", () => { updateSumPill(); exMsg(""); });
-
-    EX.diff.addEventListener("input", () => {
-      renderBloom(Number(EX.diff.value || 3));
-      exMsg("");
-    });
-
-    EX.addPart.addEventListener("click", () => {
-      addPart({name: makePartName(EX.parts.querySelectorAll(".part-row").length), points: 0, q: 0});
-      updateSumPill();
-    });
-
-    EX.resetParts.addEventListener("click", () => { resetParts(); exMsg(""); });
-
-    EX.toText.addEventListener("click", () => {
-      const st = getExamState();
-      const errs = validateExam(st);
-      if (errs.length){ exMsg("❌ " + errs[0], false); return; }
-      appendToTextContext(buildExamContext(st));
-      exMsg("✅ Πήγαν στη Λεκτική ως context.", true);
-      textInput.focus();
-    });
-
-    EX.gen.addEventListener("click", async () => {
-      const st = getExamState();
-      const errs = validateExam(st);
-      if (errs.length){ exMsg("❌ " + errs[0], false); return; }
-
-      // Μετατροπή σε payload για /v2/exam/generate
-      const numQuestions = sum(st.parts.map(p => p.q || 0));
-      if (numQuestions <= 0) {
-        exMsg("❌ Πρόσθεσε τουλάχιστον 1 ερώτηση στα μέρη.", false);
-        return;
-      }
-
-      const preset = BLOOM_PRESETS[st.diff] || BLOOM_PRESETS[3];
-      const bloomWeights = {
-        remember: preset[0],
-        understand: preset[1],
-        apply: preset[2],
-        analyze: preset[3],
-        evaluate: preset[4],
-        create: preset[5]
-      };
-
-      // Difficulty weights: easy/medium/hard based on diff (1-5)
-      const diffWeights = {
-        1: {easy: 70, medium: 25, hard: 5},
-        2: {easy: 50, medium: 40, hard: 10},
-        3: {easy: 40, medium: 40, hard: 20},
-        4: {easy: 25, medium: 40, hard: 35},
-        5: {easy: 15, medium: 35, hard: 50}
-      };
-      const difficultyWeights = diffWeights[st.diff] || diffWeights[3];
-
-      // Parse pages if provided
-      const pageRanges = [];
-      if (st.pages) {
-        const parts = st.pages.split(',').map(p => p.trim());
-        for (const part of parts) {
-          if (part.includes('-')) {
-            const [from, to] = part.split('-').map(x => parseInt(x.trim()));
-            if (!isNaN(from) && !isNaN(to)) {
-              pageRanges.push({from: Math.min(from, to), to: Math.max(from, to)});
-            }
-          } else {
-            const page = parseInt(part.trim());
-            if (!isNaN(page)) {
-              pageRanges.push({from: page, to: page});
-            }
-          }
-        }
-      }
-
-      const sourceScope = {
-        book_id: st.book_id || null,
-        chapter_ids: st.chapter_id ? [st.chapter_id] : [],
-        pages: pageRanges,
-        strict_in_syllabus: true
-      };
-
-      const payload = {
-        grade: st.grade,
-        num_questions: numQuestions,
-        duration_minutes: st.time,
-        total_points: String(st.scale),
-        min_step: String(st.step),
-        difficulty_weights: difficultyWeights,
-        bloom_weights: bloomWeights,
-        recommended_preset: null,
-        source_scope: sourceScope,
-        include_solutions: true
-      };
-
-      exMsg("⏳ Δημιουργείται διαγώνισμα...", true);
-      setStatus("Το AI δημιουργεί διαγώνισμα…");
-      statusEl.classList.add("status-thinking");
-      answerEl.innerHTML = "Το AI δημιουργεί διαγώνισμα…";
-      await renderMathIn(answerEl);
-      showContinueBox(false);
-
-      try {
-        const res = await fetch(`${BASE_URL}/v2/exam/generate?beta=1`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({detail: `HTTP ${res.status}`}));
-          throw new Error(errorData.detail || `HTTP ${res.status}`);
-        }
-
-        const examData = await res.json();
-        
-        // Format exam for display
-        let examText = `=== ΔΙΑΓΩΝΙΣΜΑ ===\n\n`;
-        examText += `Τίτλος: ${examData.title || "Διαγώνισμα"}\n`;
-        examText += `Grade: ${examData.grade || st.grade}\n`;
-        examText += `Χρόνος: ${examData.duration_minutes || st.time} λεπτά\n`;
-        examText += `Κλίμακα: ${examData.total_points || st.scale}/${examData.total_points || st.scale}\n`;
-        examText += `Min βήμα: ${examData.min_step || st.step}\n\n`;
-
-        if (examData.questions && examData.questions.length > 0) {
-          examText += `=== ΕΡΩΤΗΣΕΙΣ ===\n\n`;
-          examData.questions.forEach((q, idx) => {
-            examText += `${q.id || `Q${idx+1}`} (${q.points || 0} μονάδες)\n`;
-            examText += `Δυσκολία: ${q.difficulty || "—"} | Bloom: ${q.bloom || "—"}\n`;
-            examText += `${q.statement || q.prompt || ""}\n`;
-            if (q.solution && examData.include_solutions) {
-              examText += `\nΛύση:\n${q.solution}\n`;
-            }
-            examText += `\n---\n\n`;
-          });
-        }
-
-        if (examData.scope_report) {
-          examText += `\n=== SCOPE REPORT ===\n`;
-          examText += `Χρησιμοποιήθηκε: ${examData.scope_report.used_book_id || "—"}\n`;
-          examText += `Κεφάλαια: ${(examData.scope_report.used_chapter_ids || []).join(", ") || "—"}\n`;
-        }
-
-        await renderAnswer(examText);
-        exMsg("✅ Δημιουργήθηκε διαγώνισμα!", true);
-      } catch(e) {
-        await renderAnswer(`Σφάλμα: ${e.message || "Δεν μπόρεσε να δημιουργηθεί το διαγώνισμα."}`);
-        exMsg("❌ Σφάλμα: " + (e.message || "Δεν μπόρεσε να δημιουργηθεί."), false);
-      }
-
-      setStatus("");
-      statusEl.classList.remove("status-thinking");
-    });
-
-    // update pill on inputs
-    EX.parts.addEventListener("input", () => updateSumPill());
-    updateSumPill();
-
-    // scope
-    loadScope();
-  }
-
-  wireExam();
 
   /* ===================== INK MODAL ===================== */
   (function(){
@@ -2180,4 +1704,5 @@
 
 
   
+
 
