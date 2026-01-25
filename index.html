@@ -88,7 +88,8 @@
       cursor:pointer;touch-action:manipulation;white-space:nowrap;
     }
 
-    .tools-header{display:flex;gap:10px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+    .tools-header{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+    .tools-header > div{display:flex;flex-direction:column;gap:8px}
     .tool-tabs{display:flex;gap:6px;flex-wrap:wrap}
     .tool-tab{border:0;border-radius:999px;padding:8px 14px;background:#e5e7eb;cursor:pointer;font-weight:900;font-size:.82rem;touch-action:manipulation}
     .tool-tab.active{background:#111827;color:#fff}
@@ -98,7 +99,7 @@
     .geogebra-section{margin-top:10px}
     .geogebra-panel{display:flex;flex-direction:column;gap:8px}
     .geogebra-bar{
-      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      display:flex;align-items:center;justify-content:flex-start;gap:10px;flex-wrap:wrap;
       padding:8px 10px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa
     }
     .geogebra-title{font-weight:950;color:#0f172a}
@@ -110,6 +111,9 @@
     .geogebra-canvas{
       width:100%;height:calc(100vh - 190px);min-height:740px;
       border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#fff
+    }
+    .card .geogebra-canvas{
+      height:500px;min-height:500px;
     }
     .geogebra-canvas.is-hidden{display:none}
     .geogebra-open-btn.active{background:#dc2626;color:#fff}
@@ -336,12 +340,31 @@
     <div class="tools-header">
       <div>
         <label>Εργαλεία</label>
-        <div class="muted">Ό,τι φτιάχνεις εδώ μπαίνει σαν context στη Λεκτική απορία.</div>
+        <div class="tool-tabs" id="tool-tabs">
+          <button class="tool-tab active" data-tool="matrix" type="button">Πίνακες</button>
+          <button class="tool-tab" data-tool="series" type="button">Σειρές</button>
+          <button class="tool-tab" data-tool="stats" type="button">Στατιστική</button>
+        </div>
       </div>
-      <div class="tool-tabs" id="tool-tabs">
-        <button class="tool-tab active" data-tool="matrix" type="button">Πίνακες</button>
-        <button class="tool-tab" data-tool="series" type="button">Σειρές</button>
-        <button class="tool-tab" data-tool="stats" type="button">Στατιστική</button>
+    </div>
+
+    <!-- ===== GEOGEBRA ===== -->
+    <div class="geogebra-section" style="margin-top:10px">
+      <div class="geogebra-panel">
+        <div class="geogebra-bar">
+          <div class="row" style="gap:12px;align-items:center">
+            <button class="btn dark geogebra-open-btn" id="geogebra-open-btn" type="button">GeoGebra</button>
+            <label class="row" style="gap:8px;align-items:center">
+              <input type="checkbox" id="geogebra-axes-toggle" checked />
+              <span class="muted"><b>Άξονες</b></span>
+            </label>
+            <label class="row" style="gap:8px;align-items:center">
+              <input type="checkbox" id="geogebra-grid-toggle" checked />
+              <span class="muted"><b>Πλέγμα</b></span>
+            </label>
+          </div>
+        </div>
+        <div id="geogebra-container" class="geogebra-canvas is-hidden"></div>
       </div>
     </div>
 
@@ -465,26 +488,6 @@
             <button class="btn ghost" id="stats-test-btn" type="button">Έλεγχος</button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ===== GEOGEBRA ===== -->
-    <div class="geogebra-section" id="tool-geogebra">
-      <div class="geogebra-panel">
-        <div class="geogebra-bar geogebra-fullbleed">
-          <button class="btn dark geogebra-open-btn" id="geogebra-open-btn" type="button">GeoGebra</button>
-          <div class="row" style="gap:12px;align-items:center">
-            <label class="row" style="gap:8px;align-items:center">
-              <input type="checkbox" id="geogebra-axes-toggle" checked />
-              <span class="muted"><b>Άξονες</b></span>
-            </label>
-            <label class="row" style="gap:8px;align-items:center">
-              <input type="checkbox" id="geogebra-grid-toggle" checked />
-              <span class="muted"><b>Πλέγμα</b></span>
-            </label>
-          </div>
-        </div>
-        <div id="geogebra-container" class="geogebra-canvas geogebra-fullbleed is-hidden"></div>
       </div>
     </div>
 
@@ -675,7 +678,7 @@
 
   /* ===================== KEYBOARD ===================== */
   const keyboardLayouts = {
-    num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=',' ']],
+    num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=','|x|',' ']],
     func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','dx'],['sec(x)','csc(x)','π∫','{','}','≤','≥'],['=',' ']],
     abc: [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','(',')'],['=',' ']],
     sym: [['#','&','¬','≈','≠','∞'],['≤','≥','∈','∉','⇒','⇔'],['⊂','⊆','⊄','⊇','|','‖'],['=',' ']]
@@ -694,6 +697,7 @@
     else if (label === '√') insertText = '√( )';
     else if (label === 'ⁿ√') insertText = '3√( )';
     else if (label === 'π∫') insertText = 'V = π∫_{a}^{b} f(x)^2 dx';
+    else if (label === '|x|') insertText = '| |';
     else insertText = label;
 
     insertAtCursor(mathInput, insertText);
