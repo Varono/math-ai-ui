@@ -671,7 +671,7 @@
   /* ===================== KEYBOARD ===================== */
   const keyboardLayouts = {
     num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=','|x|',' ']],
-    func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','dx'],['sec(x)','csc(x)','π∫','{','}','≤','≥'],['=',' ']],
+    func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','∫_{a}^{b}'],['sec(x)','csc(x)','π∫','∬','∬_{D}','dx'],['=',' ']],
     abc: [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','(',')'],['=',' ']],
     sym: [['#','&','¬','≈','≠','∞'],['≤','≥','∈','∉','⇒','⇔'],['⊂','⊆','⊄','⊇','|','‖'],['=',' ']]
   };
@@ -689,6 +689,9 @@
     else if (label === '√') insertText = '√( )';
     else if (label === 'ⁿ√') insertText = '3√( )';
     else if (label === 'π∫') insertText = 'V = π∫_{a}^{b} f(x)^2 dx';
+    else if (label === '∫_{a}^{b}') insertText = '∫_{a}^{b} f(x) dx';
+    else if (label === '∬') insertText = '∬ f(x,y) dx dy';
+    else if (label === '∬_{D}') insertText = '∬_{D} f(x,y) dx dy';
     else if (label === '|x|') insertText = '| |';
     else insertText = label;
 
@@ -733,7 +736,9 @@
     t = t.replace(/([0-9a-zA-Z\)\}])\s*:\s*([0-9a-zA-Z\\(\{])/g, '$1/$2');
 
     if (!alreadyLatex){
+      t = t.replace(/∬/g,'\\iint ');
       t = t.replace(/∫/g,'\\int ');
+      t = t.replace(/\s*dx\s*dy\b/g,'\\, dx \\, dy');
       t = t.replace(/\s*dx\b/g,'\\, dx');
 
       t = t.replace(/(\d+)\s*√\s*\(([^)]*)\)/g,'\\sqrt[$1]{$2}');
