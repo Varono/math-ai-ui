@@ -671,7 +671,7 @@
   /* ===================== KEYBOARD ===================== */
   const keyboardLayouts = {
     num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=','|x|',' ']],
-    func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','∫_{a}^{b}'],['sec(x)','csc(x)','π∫','∬','∬_{D}','dx'],['=',' ']],
+    func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','∫_{a}^{b}'],['sec(x)','csc(x)','π∫','∬','∬_{D}','dx'],['lim','+∞','-∞','=',' ']],
     abc: [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','(',')'],['=',' ']],
     sym: [['#','&','¬','≈','≠','∞'],['≤','≥','∈','∉','⇒','⇔'],['⊂','⊆','⊄','⊇','|','‖'],['=',' ']]
   };
@@ -693,6 +693,9 @@
     else if (label === '∬') insertText = '∬ f(x,y) dx dy';
     else if (label === '∬_{D}') insertText = '∬_{D} f(x,y) dx dy';
     else if (label === '|x|') insertText = '| |';
+    else if (label === 'lim') insertText = '\\lim_{x \\to a} f(x)';
+    else if (label === '+∞') insertText = '+\\infty';
+    else if (label === '-∞') insertText = '-\\infty';
     else insertText = label;
 
     insertAtCursor(mathInput, insertText);
@@ -736,6 +739,7 @@
     t = t.replace(/([0-9a-zA-Z\)\}])\s*:\s*([0-9a-zA-Z\\(\{])/g, '$1/$2');
 
     if (!alreadyLatex){
+      t = t.replace(/∞/g,'\\infty');
       t = t.replace(/∬/g,'\\iint ');
       t = t.replace(/∫/g,'\\int ');
       t = t.replace(/\s*dx\s*dy\b/g,'\\, dx \\, dy');
