@@ -874,12 +874,8 @@
 <script src="https://www.geogebra.org/apps/deployggb.js"></script>
 <script>
   /* ===================== SERVER ===================== */
-  // Αν το UI είναι σε άλλο domain από το FastAPI, βάλε εδώ το server URL σου.
-  // Π.χ. "https://math-ai-server.onrender.com"
-  // Default: local server (για development)
-  // Αν θέλεις production, άλλαξε το παρακάτω σε:
-  // const BASE_URL = "https://math-ai-server.onrender.com";
-  const BASE_URL = "http://127.0.0.1:8003";
+  // Production server URL
+  const BASE_URL = "https://math-ai-server.onrender.com";
 
   /* ===================== TOAST ===================== */
   const toast = document.getElementById("answer-toast");
