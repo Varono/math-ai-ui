@@ -361,7 +361,6 @@
       <div>
         <div class="tool-tabs" id="tool-tabs">
           <button class="tool-tab active" data-tool="matrix" type="button">Πίνακες</button>
-          <button class="tool-tab" data-tool="series" type="button">Σειρές</button>
           <button class="tool-tab" data-tool="stats" type="button">Στατιστική</button>
         </div>
       </div>
@@ -423,45 +422,6 @@
     </div>
 
     <!-- ===== SERIES ===== -->
-    <div class="tool-panel" id="tool-series">
-      <div class="two-col">
-        <div class="mini-card">
-          <div class="mini-title">Άθροισμα (Σ)</div>
-          <div class="muted">Γράψε τον όρο πάνω. (Προαιρετικά) κάνε highlight.</div>
-
-          <div class="inline-inputs" style="margin-top:10px">
-            <div>
-              <div class="muted"><b>Από (n = )</b></div>
-              <input type="text" id="series-from" placeholder="1" inputmode="numeric" />
-            </div>
-            <div>
-              <div class="muted"><b>Έως</b></div>
-              <input type="text" id="series-to" placeholder="∞ ή 6" inputmode="numeric" />
-            </div>
-          </div>
-
-          <div class="row">
-            <button class="btn primary" id="series-wrap-btn" type="button">Κάνε άθροισμα</button>
-            <button class="btn ghost" id="series-clear-btn" type="button">Καθάρισε</button>
-            <button class="btn ghost" id="series-to-text-btn" type="button">Στείλτο στη Λεκτική</button>
-          </div>
-        </div>
-
-        <div class="mini-card">
-          <div class="mini-title">Γρήγορα κουμπιά</div>
-          <div class="muted">Στήνουν ερώτηση στη Λεκτική απορία.</div>
-          <div class="row" style="margin-top:10px">
-            <button class="btn ghost" id="series-geo-btn" type="button">Γεωμετρική</button>
-            <button class="btn ghost" id="series-taylor-btn" type="button">Taylor</button>
-            <button class="btn ghost" id="series-test-btn" type="button">Κριτήριο</button>
-          </div>
-          <div class="divider"></div>
-          <div class="mini-title">Tip</div>
-          <div class="muted">Αν δεν κάνεις highlight, θα βάλει <b>a_n</b>.</div>
-        </div>
-      </div>
-    </div>
-
     <!-- ===== STATS ===== -->
     <div class="tool-panel" id="tool-stats">
       <div class="two-col">
@@ -670,7 +630,7 @@
 
   /* ===================== KEYBOARD ===================== */
   const keyboardLayouts = {
-    num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=','|x|',' ']],
+    num: [['x','y','z','π','e','7','8','9','×','÷'],['x²','xⁿ','a/b','√','ⁿ√','4','5','6','+','−'],['1','2','3','0','≤','≥','<','>'],['=','|x|','∞','Σ',' ']],
     func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','∫_{a}^{b}'],['sec(x)','csc(x)','π∫','∬','∬_{D}','dx'],['lim','+∞','-∞','=',' ']],
     abc: [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','(',')'],['=',' ']],
     sym: [['#','&','¬','≈','≠','∞'],['≤','≥','∈','∉','⇒','⇔'],['⊂','⊆','⊄','⊇','|','‖'],['=',' ']]
@@ -696,6 +656,8 @@
     else if (label === 'lim') insertText = '\\lim_{x \\to a} f(x)';
     else if (label === '+∞') insertText = '+\\infty';
     else if (label === '-∞') insertText = '-\\infty';
+    else if (label === '∞') insertText = '\\infty';
+    else if (label === 'Σ') insertText = '\\sum_{a}^{b} a_n';
     else insertText = label;
 
     insertAtCursor(mathInput, insertText);
@@ -1120,7 +1082,6 @@
   const toolTabs = document.querySelectorAll(".tool-tab");
   const toolPanels = {
     matrix: document.getElementById("tool-matrix"),
-    series: document.getElementById("tool-series"),
     stats: document.getElementById("tool-stats")
   };
 
@@ -1317,37 +1278,6 @@
   document.getElementById("dynsys-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx_{k+1}=Ax_k με A=${lastMatrixLatex}.`); textInput.focus(); });
   document.getElementById("ode-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx'(t)=Ax(t) με A=${lastMatrixLatex}.`); textInput.focus(); });
 
-  /* ===================== SERIES ===================== */
-  const seriesFrom = document.getElementById("series-from");
-  const seriesTo = document.getElementById("series-to");
-
-  function seriesLatexFromTerm(term){
-    const from = (seriesFrom.value || "").trim() || "1";
-    let to = (seriesTo.value || "").trim() || "\\infty";
-    if (to === "∞") to = "\\infty";
-    const t = (term || "").trim() || "a_n";
-    return `\\sum_{n=${from}}^{${to}} ${t}`;
-  }
-  function pushSeriesContext(latex){
-    appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΣειρά: ${latex}\nΕρώτηση: άθροισμα/σύγκλιση/κριτήριο/παράδειγμα.`);
-  }
-  document.getElementById("series-wrap-btn").addEventListener("click", () => {
-    const selected = getSelectionText(mathInput).trim();
-    const latex = seriesLatexFromTerm(selected || "a_n");
-    if (selected) replaceSelection(mathInput, latex); else insertAtCursor(mathInput, latex);
-    updateMathPreview();
-    pushSeriesContext(latex);
-    textInput.focus();
-  });
-  document.getElementById("series-clear-btn").addEventListener("click", () => { seriesFrom.value=""; seriesTo.value=""; });
-  document.getElementById("series-to-text-btn").addEventListener("click", () => {
-    const selected = getSelectionText(mathInput).trim();
-    pushSeriesContext(seriesLatexFromTerm(selected || "a_n"));
-    textInput.focus();
-  });
-  document.getElementById("series-geo-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΘέλω γεωμετρική σειρά: σύγκλιση, άθροισμα, παράδειγμα.`); textInput.focus(); });
-  document.getElementById("series-taylor-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΘέλω σειρά Taylor: τύπος, παράδειγμα, περιοχή σύγκλισης.`); textInput.focus(); });
-  document.getElementById("series-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΕΙΡΕΣ")}\nΔιάλεξε κατάλληλο κριτήριο σύγκλισης και δείξε βήματα.`); textInput.focus(); });
 
   /* ===================== STATS ===================== */
   const statsData = document.getElementById("stats-data");
