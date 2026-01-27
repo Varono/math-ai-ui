@@ -132,6 +132,12 @@
 
     .inline-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
 
+    .stats-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .stats-tab{border:0;border-radius:999px;padding:6px 12px;background:#e5e7eb;cursor:pointer;font-weight:900;font-size:.8rem;touch-action:manipulation}
+    .stats-tab.active{background:#2563eb;color:#fff}
+    .sequences-subpanel{display:none}
+    .sequences-subpanel.active{display:block}
+
     @media(max-width:650px){
       .btn{padding:10px 14px;font-size:14px}
       .tool-tab{padding:10px 14px}
@@ -361,6 +367,7 @@
       <div>
         <div class="tool-tabs" id="tool-tabs">
           <button class="tool-tab active" data-tool="matrix" type="button">Πίνακες</button>
+          <button class="tool-tab" data-tool="sequences" type="button">Ακολουθίες</button>
           <button class="tool-tab" data-tool="stats" type="button">Στατιστική</button>
         </div>
       </div>
@@ -421,7 +428,173 @@
       </div>
     </div>
 
-    <!-- ===== SERIES ===== -->
+    <!-- ===== SEQUENCES ===== -->
+    <div class="tool-panel" id="tool-sequences">
+      <div class="stats-tabs" style="margin-bottom:15px">
+        <button class="stats-tab active" data-sequences-type="arithmetic" type="button">Αριθμητική Πρόοδος</button>
+        <button class="stats-tab" data-sequences-type="geometric" type="button">Γεωμετρική Πρόοδος</button>
+      </div>
+
+      <!-- Αριθμητική Πρόοδος -->
+      <div class="sequences-subpanel active" id="sequences-arithmetic">
+        <div class="two-col">
+          <div class="mini-card">
+            <div class="mini-title">Αριθμητική Πρόοδος (Α.Π.)</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">aₙ = a₁ + (n-1)·d</div>
+            
+            <div style="margin-top:15px">
+              <div class="muted" style="margin-bottom:4px"><b>Τύπος υπολογισμού:</b></div>
+              <select id="ap-calc-type" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db">
+                <option value="find_term">Βρες aₙ (n-οστός όρος)</option>
+                <option value="find_sum">Βρες Sₙ (άθροισμα n όρων)</option>
+                <option value="find_progression">Βρες πρόοδο από 2 όρους</option>
+                <option value="arithmetic_mean">Αριθμητικός μέσος</option>
+              </select>
+            </div>
+
+            <!-- find_term / find_sum -->
+            <div id="ap-basic-inputs" style="margin-top:15px">
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>a₁ (πρώτος όρος):</b></div>
+                <input type="number" id="ap-a1" step="any" placeholder="π.χ. 5" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>d (διαφορά):</b></div>
+                <input type="number" id="ap-d" step="any" placeholder="π.χ. 3" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>n (θέση όρου):</b></div>
+                <input type="number" id="ap-n" min="1" placeholder="π.χ. 10" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+            </div>
+
+            <!-- find_progression -->
+            <div id="ap-progression-inputs" style="margin-top:15px; display:none">
+              <div class="muted" style="margin-bottom:8px">Δώσε δύο όρους για να βρεθεί η πρόοδος:</div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>aᵢ (πρώτος γνωστός όρος):</b></div>
+                <input type="number" id="ap-ai" step="any" placeholder="π.χ. 8" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>i (θέση πρώτου όρου):</b></div>
+                <input type="number" id="ap-i" min="1" placeholder="π.χ. 3" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>aⱼ (δεύτερος γνωστός όρος):</b></div>
+                <input type="number" id="ap-aj" step="any" placeholder="π.χ. 20" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>j (θέση δεύτερου όρου):</b></div>
+                <input type="number" id="ap-j" min="1" placeholder="π.χ. 7" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+            </div>
+
+            <!-- arithmetic_mean -->
+            <div id="ap-mean-inputs" style="margin-top:15px; display:none">
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>a (πρώτος αριθμός):</b></div>
+                <input type="number" id="ap-mean-a" step="any" placeholder="π.χ. 10" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>b (δεύτερος αριθμός):</b></div>
+                <input type="number" id="ap-mean-b" step="any" placeholder="π.χ. 20" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:15px">
+              <button class="btn primary" id="ap-calc-btn" type="button">Υπολογισμός</button>
+              <button class="btn ghost" id="ap-clear-btn" type="button">Καθάρισε</button>
+            </div>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-title">Αποτελέσματα</div>
+            <div id="ap-results" class="result-box mono" style="min-height:200px; white-space:pre-wrap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Γεωμετρική Πρόοδος -->
+      <div class="sequences-subpanel" id="sequences-geometric">
+        <div class="two-col">
+          <div class="mini-card">
+            <div class="mini-title">Γεωμετρική Πρόοδος (Γ.Π.)</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">aₙ = a₁ · λ^(n-1)</div>
+            
+            <div style="margin-top:15px">
+              <div class="muted" style="margin-bottom:4px"><b>Τύπος υπολογισμού:</b></div>
+              <select id="gp-calc-type" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db">
+                <option value="find_term">Βρες aₙ (n-οστός όρος)</option>
+                <option value="find_sum">Βρες Sₙ (άθροισμα n όρων)</option>
+                <option value="find_infinite_sum">Βρες S∞ (άθροισμα άπειρων όρων)</option>
+                <option value="find_progression">Βρες πρόοδο από 2 όρους</option>
+                <option value="geometric_mean">Γεωμετρικός μέσος</option>
+              </select>
+            </div>
+
+            <!-- find_term / find_sum / find_infinite_sum -->
+            <div id="gp-basic-inputs" style="margin-top:15px">
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>a₁ (πρώτος όρος):</b></div>
+                <input type="number" id="gp-a1" step="any" placeholder="π.χ. 2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>λ (λόγος):</b></div>
+                <input type="number" id="gp-lamda" step="any" placeholder="π.χ. 0.5" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div id="gp-n-input" style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>n (θέση όρου):</b></div>
+                <input type="number" id="gp-n" min="1" placeholder="π.χ. 10" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+            </div>
+
+            <!-- find_progression -->
+            <div id="gp-progression-inputs" style="margin-top:15px; display:none">
+              <div class="muted" style="margin-bottom:8px">Δώσε δύο όρους για να βρεθεί η πρόοδος:</div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>aᵢ (πρώτος γνωστός όρος):</b></div>
+                <input type="number" id="gp-ai" step="any" placeholder="π.χ. 4" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>i (θέση πρώτου όρου):</b></div>
+                <input type="number" id="gp-i" min="1" placeholder="π.χ. 2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>aⱼ (δεύτερος γνωστός όρος):</b></div>
+                <input type="number" id="gp-aj" step="any" placeholder="π.χ. 32" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>j (θέση δεύτερου όρου):</b></div>
+                <input type="number" id="gp-j" min="1" placeholder="π.χ. 5" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+            </div>
+
+            <!-- geometric_mean -->
+            <div id="gp-mean-inputs" style="margin-top:15px; display:none">
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>a (πρώτος αριθμός):</b></div>
+                <input type="number" id="gp-mean-a" step="any" min="0" placeholder="π.χ. 9" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+              <div style="margin-top:10px">
+                <div class="muted" style="margin-bottom:4px"><b>b (δεύτερος αριθμός):</b></div>
+                <input type="number" id="gp-mean-b" step="any" min="0" placeholder="π.χ. 16" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:15px">
+              <button class="btn primary" id="gp-calc-btn" type="button">Υπολογισμός</button>
+              <button class="btn ghost" id="gp-clear-btn" type="button">Καθάρισε</button>
+            </div>
+          </div>
+
+          <div class="mini-card">
+            <div class="mini-title">Αποτελέσματα</div>
+            <div id="gp-results" class="result-box mono" style="min-height:200px; white-space:pre-wrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== STATS ===== -->
     <div class="tool-panel" id="tool-stats">
       <div class="two-col">
@@ -543,7 +716,10 @@
   /* ===================== SERVER ===================== */
   // Αν το UI είναι σε άλλο domain από το FastAPI, βάλε εδώ το server URL σου.
   // Π.χ. "https://math-ai-server.onrender.com"
-  const BASE_URL = "https://math-ai-server.onrender.com";
+  // Default: local server (για development)
+  // Αν θέλεις production, άλλαξε το παρακάτω σε:
+  // const BASE_URL = "https://math-ai-server.onrender.com";
+  const BASE_URL = "http://127.0.0.1:8003";
 
   /* ===================== TOAST ===================== */
   const toast = document.getElementById("answer-toast");
@@ -1082,6 +1258,7 @@
   const toolTabs = document.querySelectorAll(".tool-tab");
   const toolPanels = {
     matrix: document.getElementById("tool-matrix"),
+    sequences: document.getElementById("tool-sequences"),
     stats: document.getElementById("tool-stats")
   };
 
@@ -1278,6 +1455,207 @@
   document.getElementById("dynsys-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx_{k+1}=Ax_k με A=${lastMatrixLatex}.`); textInput.focus(); });
   document.getElementById("ode-btn").addEventListener("click", () => { if(!ensureMatrixInContext())return; appendToTextContext(`${addToolHeader("ΕΦΑΡΜΟΓΗ")}\nx'(t)=Ax(t) με A=${lastMatrixLatex}.`); textInput.focus(); });
 
+
+  /* ===================== SEQUENCES ===================== */
+  // Sequences tabs
+  const sequencesTabs = document.querySelectorAll("[data-sequences-type]");
+  const sequencesSubpanels = {
+    arithmetic: document.getElementById("sequences-arithmetic"),
+    geometric: document.getElementById("sequences-geometric")
+  };
+
+  sequencesTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      sequencesTabs.forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      Object.values(sequencesSubpanels).forEach(p => p?.classList.remove("active"));
+      sequencesSubpanels[tab.dataset.sequencesType]?.classList.add("active");
+    });
+  });
+
+  // Αριθμητική Πρόοδος
+  const apCalcType = document.getElementById("ap-calc-type");
+  const apBasicInputs = document.getElementById("ap-basic-inputs");
+  const apProgressionInputs = document.getElementById("ap-progression-inputs");
+  const apMeanInputs = document.getElementById("ap-mean-inputs");
+  const apCalcBtn = document.getElementById("ap-calc-btn");
+  const apClearBtn = document.getElementById("ap-clear-btn");
+  const apResults = document.getElementById("ap-results");
+
+  apCalcType.addEventListener("change", () => {
+    const type = apCalcType.value;
+    apBasicInputs.style.display = (type === "find_term" || type === "find_sum") ? "block" : "none";
+    apProgressionInputs.style.display = type === "find_progression" ? "block" : "none";
+    apMeanInputs.style.display = type === "arithmetic_mean" ? "block" : "none";
+  });
+
+  apCalcBtn.addEventListener("click", async () => {
+    const type = apCalcType.value;
+    let payload = { calc_type: type };
+
+    if (type === "find_term" || type === "find_sum") {
+      const a1 = parseFloat(document.getElementById("ap-a1").value);
+      const d = parseFloat(document.getElementById("ap-d").value);
+      const n = parseInt(document.getElementById("ap-n").value);
+      if (!a1 || !d || !n) {
+        apResults.textContent = "Σφάλμα: Συμπλήρωσε όλα τα πεδία (a₁, d, n)";
+        return;
+      }
+      payload = { calc_type: type, a1, d, n };
+    } else if (type === "find_progression") {
+      const ai = parseFloat(document.getElementById("ap-ai").value);
+      const aj = parseFloat(document.getElementById("ap-aj").value);
+      const i = parseInt(document.getElementById("ap-i").value);
+      const j = parseInt(document.getElementById("ap-j").value);
+      if (!ai || !aj || !i || !j) {
+        apResults.textContent = "Σφάλμα: Συμπλήρωσε όλα τα πεδία (aᵢ, aⱼ, i, j)";
+        return;
+      }
+      payload = { calc_type: type, a_i: ai, a_j: aj, i, j };
+    } else if (type === "arithmetic_mean") {
+      const a = parseFloat(document.getElementById("ap-mean-a").value);
+      const b = parseFloat(document.getElementById("ap-mean-b").value);
+      if (!a || !b) {
+        apResults.textContent = "Σφάλμα: Συμπλήρωσε και τους δύο αριθμούς";
+        return;
+      }
+      payload = { calc_type: type, a_i: a, a_j: b };
+    }
+
+    try {
+      apResults.textContent = "Υπολογισμός...";
+      const res = await fetch(`${BASE_URL}/sequences/arithmetic`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Σφάλμα");
+      
+      let output = data.formula + "\n\n";
+      if (data.result !== undefined) output += `Αποτέλεσμα: ${data.result}\n`;
+      if (data.a1 !== undefined) output += `a₁ = ${data.a1}\n`;
+      if (data.d !== undefined) output += `d = ${data.d}\n`;
+      if (data.a_n !== undefined) output += `aₙ = ${data.a_n}\n`;
+      if (data.S_n !== undefined) output += `Sₙ = ${data.S_n}\n`;
+      if (data.mean !== undefined) output += `Μέσος = ${data.mean}\n`;
+      
+      apResults.textContent = output;
+    } catch (e) {
+      apResults.textContent = `Σφάλμα: ${e.message}`;
+    }
+  });
+
+  apClearBtn.addEventListener("click", () => {
+    document.getElementById("ap-a1").value = "";
+    document.getElementById("ap-d").value = "";
+    document.getElementById("ap-n").value = "";
+    document.getElementById("ap-ai").value = "";
+    document.getElementById("ap-aj").value = "";
+    document.getElementById("ap-i").value = "";
+    document.getElementById("ap-j").value = "";
+    document.getElementById("ap-mean-a").value = "";
+    document.getElementById("ap-mean-b").value = "";
+    apResults.textContent = "";
+  });
+
+  // Γεωμετρική Πρόοδος
+  const gpCalcType = document.getElementById("gp-calc-type");
+  const gpBasicInputs = document.getElementById("gp-basic-inputs");
+  const gpNInput = document.getElementById("gp-n-input");
+  const gpProgressionInputs = document.getElementById("gp-progression-inputs");
+  const gpMeanInputs = document.getElementById("gp-mean-inputs");
+  const gpCalcBtn = document.getElementById("gp-calc-btn");
+  const gpClearBtn = document.getElementById("gp-clear-btn");
+  const gpResults = document.getElementById("gp-results");
+
+  gpCalcType.addEventListener("change", () => {
+    const type = gpCalcType.value;
+    gpBasicInputs.style.display = (type === "find_term" || type === "find_sum" || type === "find_infinite_sum") ? "block" : "none";
+    gpNInput.style.display = type === "find_infinite_sum" ? "none" : "block";
+    gpProgressionInputs.style.display = type === "find_progression" ? "block" : "none";
+    gpMeanInputs.style.display = type === "geometric_mean" ? "block" : "none";
+  });
+
+  gpCalcBtn.addEventListener("click", async () => {
+    const type = gpCalcType.value;
+    let payload = { calc_type: type };
+
+    if (type === "find_term" || type === "find_sum") {
+      const a1 = parseFloat(document.getElementById("gp-a1").value);
+      const lamda = parseFloat(document.getElementById("gp-lamda").value);
+      const n = parseInt(document.getElementById("gp-n").value);
+      if (!a1 || !lamda || !n) {
+        gpResults.textContent = "Σφάλμα: Συμπλήρωσε όλα τα πεδία (a₁, λ, n)";
+        return;
+      }
+      payload = { calc_type: type, a1, lamda, n };
+    } else if (type === "find_infinite_sum") {
+      const a1 = parseFloat(document.getElementById("gp-a1").value);
+      const lamda = parseFloat(document.getElementById("gp-lamda").value);
+      if (!a1 || !lamda) {
+        gpResults.textContent = "Σφάλμα: Συμπλήρωσε a₁ και λ";
+        return;
+      }
+      payload = { calc_type: type, a1, lamda };
+    } else if (type === "find_progression") {
+      const ai = parseFloat(document.getElementById("gp-ai").value);
+      const aj = parseFloat(document.getElementById("gp-aj").value);
+      const i = parseInt(document.getElementById("gp-i").value);
+      const j = parseInt(document.getElementById("gp-j").value);
+      if (!ai || !aj || !i || !j) {
+        gpResults.textContent = "Σφάλμα: Συμπλήρωσε όλα τα πεδία (aᵢ, aⱼ, i, j)";
+        return;
+      }
+      payload = { calc_type: type, a_i: ai, a_j: aj, i, j };
+    } else if (type === "geometric_mean") {
+      const a = parseFloat(document.getElementById("gp-mean-a").value);
+      const b = parseFloat(document.getElementById("gp-mean-b").value);
+      if (!a || !b || a < 0 || b < 0) {
+        gpResults.textContent = "Σφάλμα: Συμπλήρωσε δύο θετικούς αριθμούς";
+        return;
+      }
+      payload = { calc_type: type, a_i: a, a_j: b };
+    }
+
+    try {
+      gpResults.textContent = "Υπολογισμός...";
+      const res = await fetch(`${BASE_URL}/sequences/geometric`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Σφάλμα");
+      
+      let output = data.formula + "\n\n";
+      if (data.result !== undefined) output += `Αποτέλεσμα: ${data.result}\n`;
+      if (data.a1 !== undefined) output += `a₁ = ${data.a1}\n`;
+      if (data.lamda !== undefined) output += `λ = ${data.lamda}\n`;
+      if (data.a_n !== undefined) output += `aₙ = ${data.a_n}\n`;
+      if (data.S_n !== undefined) output += `Sₙ = ${data.S_n}\n`;
+      if (data.S_inf !== undefined) output += `S∞ = ${data.S_inf}\n`;
+      if (data.mean !== undefined) output += `Μέσος = ${data.mean}\n`;
+      if (data.converges !== undefined) output += `Σύγκλιση: ${data.converges ? "Ναι" : "Όχι"}\n`;
+      
+      gpResults.textContent = output;
+    } catch (e) {
+      gpResults.textContent = `Σφάλμα: ${e.message}`;
+    }
+  });
+
+  gpClearBtn.addEventListener("click", () => {
+    document.getElementById("gp-a1").value = "";
+    document.getElementById("gp-lamda").value = "";
+    document.getElementById("gp-n").value = "";
+    document.getElementById("gp-ai").value = "";
+    document.getElementById("gp-aj").value = "";
+    document.getElementById("gp-i").value = "";
+    document.getElementById("gp-j").value = "";
+    document.getElementById("gp-mean-a").value = "";
+    document.getElementById("gp-mean-b").value = "";
+    gpResults.textContent = "";
+  });
 
   /* ===================== STATS ===================== */
   const statsData = document.getElementById("stats-data");
