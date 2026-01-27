@@ -137,6 +137,14 @@
     .stats-tab.active{background:#2563eb;color:#fff}
     .sequences-subpanel{display:none}
     .sequences-subpanel.active{display:block}
+    .stats-subpanel{display:none}
+    .stats-subpanel.active{display:block}
+    .variables-grid{border-collapse:collapse; font-size:0.82rem}
+    .variables-grid th,.variables-grid td{border:1px solid #e5e7eb; padding:4px 6px}
+    .variables-grid th{background:#f1f5f9}
+    .variables-grid .grid-index{background:#f8fafc; color:#64748b; font-weight:600; text-align:center; min-width:2rem; user-select:none}
+    .variables-grid input{width:100%; min-width:48px; border:0; padding:2px 4px; background:transparent}
+    .variables-grid input:focus{outline:1px solid #2563eb}
 
     @media(max-width:650px){
       .btn{padding:10px 14px;font-size:14px}
@@ -597,28 +605,180 @@
 
     <!-- ===== STATS ===== -->
     <div class="tool-panel" id="tool-stats">
+      <div style="margin-bottom:12px; padding:8px 12px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; font-size:0.85rem; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+        <span><b>Server:</b> <span id="stats-server-status">Έλεγχος…</span></span>
+        <button class="btn ghost" id="stats-server-test" type="button" style="padding:4px 10px; font-size:0.8rem">Test</button>
+      </div>
+      <div class="stats-tabs" style="margin-bottom:10px; flex-wrap:wrap">
+        <button class="stats-tab active" data-stats-tool="variables" type="button">Μεταβλητές</button>
+        <button class="stats-tab" data-stats-tool="descriptive" type="button">Περιγραφική Στατιστική</button>
+        <button class="stats-tab" data-stats-tool="normal" type="button">Έλεγχος Κανονικότητας</button>
+        <button class="stats-tab" data-stats-tool="ci" type="button">Δ.Ε.</button>
+        <button class="stats-tab" data-stats-tool="ttest" type="button">T-Test</button>
+        <button class="stats-tab" data-stats-tool="anova" type="button">ANOVA</button>
+        <button class="stats-tab" data-stats-tool="chisquare" type="button">χ²</button>
+        <button class="stats-tab" data-stats-tool="regression" type="button">Παλινδρόμηση</button>
+        <button class="stats-tab" data-stats-tool="excel" type="button">Excel</button>
+        <button class="stats-tab" data-stats-tool="ai" type="button">AI Assistant</button>
+      </div>
       <div class="two-col">
         <div class="mini-card">
-          <div class="mini-title">Δεδομένα</div>
-          <div class="muted">π.χ. 12, 15, 18, 18, 20</div>
-          <textarea id="stats-data" placeholder="π.χ. 12, 15, 18, 18, 20" style="margin-top:8px"></textarea>
-          <div class="row">
-            <button class="btn primary" id="stats-calc-btn" type="button">Υπολόγισε</button>
-            <button class="btn ghost" id="stats-insert-btn" type="button">Στείλτο στη Λεκτική</button>
-            <button class="btn ghost" id="stats-clear-btn" type="button">Καθάρισε</button>
+          <div id="stats-panel-variables" class="stats-subpanel active">
+            <div class="mini-title">Μεταβλητές (Data View)</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Κάθε γραμμή = άτομο · κάθε στήλη = μεταβλητή. Επικόλληση από Excel: tab. Πλοήγηση: βελάκια / Tab / τροχάκι.</div>
+            <div class="variables-grid-wrap" id="variables-grid-wrap" style="margin-top:10px; overflow:auto; max-height:280px">
+              <table class="variables-grid" id="variables-grid">
+                <thead><tr id="variables-grid-head"></tr></thead>
+                <tbody id="variables-grid-body"></tbody>
+              </table>
+            </div>
+            <div class="row" style="margin-top:10px; gap:6px; flex-wrap:wrap">
+              <button class="btn ghost" id="grid-add-row" type="button">+ Γραμμή</button>
+              <button class="btn ghost" id="grid-add-col" type="button">+ Στήλη</button>
+              <button class="btn ghost" id="grid-paste" type="button">Επικόλληση από Excel</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn ghost" id="stats-insert-btn" type="button">Στείλτο στη Λεκτική</button>
+              <button class="btn ghost" id="stats-clear-btn" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-descriptive" class="stats-subpanel" style="display:none">
+            <div class="mini-title">Περιγραφική Στατιστική</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Επίλεξε μεταβλητή (ή δύο). Προαιρετικά κατηγορική για ανάλυση ανά κατηγορία.</div>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:4px"><b>Μεταβλητή 1:</b></div>
+              <select id="descriptive-var1" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select>
+            </div>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:4px"><b>Μεταβλητή 2 (προαιρ.):</b></div>
+              <select id="descriptive-var2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Καμία —</option></select>
+            </div>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:4px"><b>Κατηγορική (προαιρ. – ανά κατηγορία):</b></div>
+              <select id="descriptive-cat" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Καμία —</option></select>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="descriptive-btn" type="button">Υπολόγισε</button>
+              <button class="btn ghost" id="descriptive-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-normal" class="stats-subpanel" style="display:none">
+            <div class="mini-title">Έλεγχος Κανονικότητας</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Επίλεξε μεταβλητή από το πλέγμα. Προαιρετικά κατηγορική για ανάλυση ανά κατηγορία.</div>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:4px"><b>Μεταβλητή:</b></div>
+              <select id="normal-var" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε μεταβλητή —</option></select>
+            </div>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:4px"><b>Κατηγορική (προαιρ.):</b></div>
+              <select id="normal-cat" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Καμία —</option></select>
+            </div>
+            <div class="muted" style="margin-top:10px"><b>Μέθοδος:</b></div>
+            <div class="row">
+              <label><input type="radio" name="normal-method" value="shapiro" checked> Shapiro-Wilk</label>
+              <label><input type="radio" name="normal-method" value="ks"> Kolmogorov-Smirnov</label>
+              <label><input type="radio" name="normal-method" value="normaltest"> D'Agostino-Pearson</label>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="normal-btn" type="button">Εκτέλεση Ελέγχου</button>
+              <button class="btn ghost" id="normal-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-ci" class="stats-subpanel" style="display:none">
+            <div class="mini-title">Διάστημα Εμπιστοσύνης</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Επίλεξε μεταβλητή. Προαιρετικά κατηγορική.</div>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:4px"><b>Μεταβλητή:</b></div>
+              <select id="ci-var" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select>
+            </div>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:4px"><b>Κατηγορική (προαιρ.):</b></div>
+              <select id="ci-cat" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Καμία —</option></select>
+            </div>
+            <div class="inline-inputs" style="margin-top:10px">
+              <div><div class="muted"><b>Επίπεδο (%)</b></div><input type="number" id="ci-level" value="95" min="1" max="99" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" /></div>
+              <div><div class="muted"><b>σ πληθυσμού (προαιρ.)</b></div><input type="number" id="ci-sigma" placeholder="άδειο για t" step="any" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" /></div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="ci-btn" type="button">Υπολογισμός</button>
+              <button class="btn ghost" id="ci-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-ttest" class="stats-subpanel" style="display:none">
+            <div class="mini-title">T-Test</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Επίλεξε μεταβλητές. Προαιρετικά κατηγορική.</div>
+            <div class="muted" style="margin-top:10px"><b>Τύπος:</b></div>
+            <div class="row">
+              <label><input type="radio" name="ttest-type" value="onesample" checked> One-Sample</label>
+              <label><input type="radio" name="ttest-type" value="twosample"> Two-Sample</label>
+              <label><input type="radio" name="ttest-type" value="paired"> Paired</label>
+            </div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Μεταβλητή 1:</b></div><select id="ttest-var1" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Μεταβλητή 2 (two/paired):</b></div><select id="ttest-var2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Κατηγορική (προαιρ.):</b></div><select id="ttest-cat" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Καμία —</option></select></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>μ₀ (one-sample):</b></div><input type="number" id="ttest-mu0" value="0" step="any" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" /></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Alternative:</b></div><select id="ttest-alt" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="two-sided">two-sided</option><option value="less">less</option><option value="greater">greater</option></select></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="ttest-btn" type="button">Εκτέλεση T-Test</button>
+              <button class="btn ghost" id="ttest-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-anova" class="stats-subpanel" style="display:none">
+            <div class="mini-title">ANOVA</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Επίλεξε μεταβλητή και κατηγορική.</div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Μεταβλητή:</b></div><select id="anova-var" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Κατηγορική μεταβλητή:</b></div><select id="anova-cat" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="anova-btn" type="button">Εκτέλεση ANOVA</button>
+              <button class="btn ghost" id="anova-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-chisquare" class="stats-subpanel" style="display:none">
+            <div class="mini-title">Chi-Square</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Δύο κατηγορικές μεταβλητές → πίνακας συχνοτήτων.</div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Μεταβλητή 1 (γραμμές):</b></div><select id="chi-var1" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Μεταβλητή 2 (στήλες):</b></div><select id="chi-var2" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="chi-btn" type="button">Εκτέλεση χ²</button>
+              <button class="btn ghost" id="chi-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-regression" class="stats-subpanel" style="display:none">
+            <div class="mini-title">Γραμμική Παλινδρόμηση</div>
+            <div class="muted" style="margin-top:4px; font-size:0.8rem">Επίλεξε X, Y. Προαιρετικά κατηγορική.</div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>X (ανεξάρτητη):</b></div><select id="reg-x" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Y (εξαρτημένη):</b></div><select id="reg-y" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Επίλεξε —</option></select></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Κατηγορική (προαιρ.):</b></div><select id="reg-cat" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db"><option value="">— Καμία —</option></select></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="reg-btn" type="button">Υπολογισμός</button>
+              <button class="btn ghost" id="reg-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-excel" class="stats-subpanel" style="display:none">
+            <div class="mini-title">Εισαγωγή από Excel</div>
+            <div class="muted" style="margin-top:4px">Επίλεξε .xlsx ή .xls. Τα δεδομένα θα προστεθούν στο πλέγμα Μεταβλητές.</div>
+            <input type="file" id="excel-file" accept=".xlsx,.xls" style="margin-top:8px; width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db" />
+            <div style="margin-top:8px"><div class="muted"><b>Sheet (προαιρ.):</b></div><input type="text" id="excel-sheet" placeholder="Κενό = πρώτο" style="width:100%; padding:8px; border-radius:8px; border:1px solid #d1d5db; margin-top:4px" /></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="excel-btn" type="button">Εισαγωγή</button>
+              <button class="btn ghost" id="excel-clear" type="button">Καθάρισε</button>
+            </div>
+          </div>
+          <div id="stats-panel-ai" class="stats-subpanel" style="display:none">
+            <div class="mini-title">AI Assistant για Στατιστική</div>
+            <div class="muted" style="margin-top:4px">Δεδομένα (JSON) και ερώτηση. Χρησιμοποιεί τα δεδομένα του πλέγματος αν αφεθεί κενό.</div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Δεδομένα (JSON, προαιρ.):</b></div><textarea id="ai-stats-data" placeholder='{"var1":[1,2,3],"var2":[4,5,6]}' style="width:100%; min-height:60px; padding:8px; border-radius:8px; border:1px solid #d1d5db; font-family:monospace; resize:vertical"></textarea></div>
+            <div style="margin-top:10px"><div class="muted" style="margin-bottom:4px"><b>Ερώτηση:</b></div><textarea id="ai-stats-query" placeholder="Ελέγξω κανονικότητα και κάνε t-test" style="width:100%; min-height:50px; padding:8px; border-radius:8px; border:1px solid #d1d5db; resize:vertical"></textarea></div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="ai-stats-btn" type="button">Εκτέλεση</button>
+              <button class="btn ghost" id="ai-stats-clear" type="button">Καθάρισε</button>
+            </div>
           </div>
         </div>
-
         <div class="mini-card">
           <div class="mini-title">Αποτελέσματα</div>
-          <div id="stats-results" class="result-box mono"></div>
-          <div class="divider"></div>
-          <div class="mini-title">Templates</div>
-          <div class="row">
-            <button class="btn ghost" id="stats-ci-btn" type="button">Δ.Ε.</button>
-            <button class="btn ghost" id="stats-z-btn" type="button">z-score</button>
-            <button class="btn ghost" id="stats-test-btn" type="button">Έλεγχος</button>
-          </div>
+          <div class="muted" style="font-size:0.8rem; margin-top:2px">Περιγραφική από «Περιγραφική Στατιστική» · έλεγχοι από τα αντίστοιχα tabs.</div>
+          <div id="stats-results" class="result-box mono" style="min-height:200px; white-space:pre-wrap"></div>
         </div>
       </div>
     </div>
@@ -1658,80 +1818,437 @@
   });
 
   /* ===================== STATS ===================== */
-  const statsData = document.getElementById("stats-data");
   const statsResults = document.getElementById("stats-results");
+  const gridHead = document.getElementById("variables-grid-head");
+  const gridBody = document.getElementById("variables-grid-body");
 
-  function parseNumbers(raw){
-    const txt=(raw||"").replace(/\n/g,' ').replace(/;/g,' ').replace(/,/g,' ').trim();
-    if(!txt) return [];
-    const parts=txt.split(/\s+/).filter(Boolean);
-    const nums=[];
-    for(const p of parts){
-      const v=Number(p.replace(',', '.'));
-      if(Number.isFinite(v)) nums.push(v);
+  function getGridData(){
+    const data = {};
+    const headers = [];
+    const ths = gridHead.querySelectorAll("th");
+    for(let i=1;i<ths.length;i++){ const n = ths[i].querySelector("input"); headers.push(n ? n.value.trim() || `var${i}` : `var${i}`); }
+    headers.forEach(h=>{ data[h] = []; });
+    gridBody.querySelectorAll("tr").forEach(tr=>{
+      const cells = tr.querySelectorAll("td");
+      headers.forEach((h,j)=>{ const inp = cells[j+1]?.querySelector("input"); data[h].push(inp ? inp.value : ""); });
+    });
+    return data;
+  }
+  function addGridRow(){
+    const nVar = gridHead.querySelectorAll("th").length - 1;
+    const rowNum = gridBody.querySelectorAll("tr").length + 1;
+    const tr = document.createElement("tr");
+    const tdi = document.createElement("td");
+    tdi.className = "grid-index";
+    tdi.textContent = String(rowNum);
+    tr.appendChild(tdi);
+    for(let i=0;i<nVar;i++){
+      const td = document.createElement("td");
+      const inp = document.createElement("input"); inp.type="text"; inp.placeholder=""; td.appendChild(inp);
+      tr.appendChild(td);
     }
-    return nums;
+    gridBody.appendChild(tr);
   }
-  function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length}
-  function median(arr){
-    const a=[...arr].sort((x,y)=>x-y), n=a.length;
-    return (n%2===1)?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2;
+  function addGridCol(){
+    const nVar = gridHead.querySelectorAll("th").length - 1;
+    const name = `var${nVar+1}`;
+    const th = document.createElement("th");
+    const inp = document.createElement("input"); inp.type="text"; inp.value = name; inp.placeholder="όνομα"; th.appendChild(inp);
+    gridHead.appendChild(th);
+    gridBody.querySelectorAll("tr").forEach(tr=>{
+      const td = document.createElement("td");
+      const i = document.createElement("input"); i.type="text"; td.appendChild(i);
+      tr.appendChild(td);
+    });
   }
-  function mode(arr){
-    const m=new Map(); for(const x of arr) m.set(x,(m.get(x)||0)+1);
-    let best=[], bestCount=0;
-    for(const [k,c] of m.entries()){
-      if(c>bestCount){bestCount=c; best=[k]}
-      else if(c===bestCount){best.push(k)}
+  function initGrid(){
+    gridHead.innerHTML=""; gridBody.innerHTML="";
+    const thi = document.createElement("th");
+    thi.className = "grid-index";
+    thi.textContent = "№";
+    gridHead.appendChild(thi);
+    addGridCol(); addGridCol();
+    for(let r=0;r<5;r++) addGridRow();
+  }
+  initGrid();
+
+  function getFocusedGridCell(){
+    const el = document.activeElement;
+    const grid = document.getElementById("variables-grid");
+    if(!el || !el.matches("input") || !grid || !grid.contains(el)) return null;
+    const th = el.closest("th");
+    if(th && grid.querySelector("thead")?.contains(th)){
+      const thr = th.closest("tr");
+      const ths = thr?.querySelectorAll("th");
+      const col = ths ? [...ths].indexOf(th) : -1;
+      if(col <= 0) return null;
+      return { row: 0, col: col - 1 };
     }
-    if(bestCount<=1) return [];
-    return best.sort((a,b)=>a-b);
+    const td = el.closest("td");
+    if(!td) return null;
+    const tr = td.closest("tr");
+    if(!tr || !gridBody.contains(tr)) return null;
+    const trs = gridBody.querySelectorAll("tr");
+    const row = [...trs].indexOf(tr) + 1;
+    const tds = tr.querySelectorAll("td");
+    const col = [...tds].indexOf(td);
+    if(col <= 0) return null;
+    return { row, col: col - 1 };
   }
-  function variance(arr,sample=true){
-    const mu=mean(arr), n=arr.length;
-    const s=arr.reduce((acc,x)=>acc+(x-mu)*(x-mu),0);
-    return sample?s/(n-1):s/n;
+  function parsePasteText(t){
+    const raw = (t||"").trim().replace(/\r\n/g,"\n").replace(/\r/g,"\n");
+    if(!raw) return [];
+    return raw.split("\n").map(l=> l.split(/\t/));
   }
-  function fmt(x){
-    if(!Number.isFinite(x)) return String(x);
-    const abs=Math.abs(x);
-    if(abs>=1000 || abs<0.001) return x.toExponential(4);
-    return x.toFixed(4).replace(/\.?0+$/,'');
+  function doPaste(originRow, originCol, text){
+    const rows = parsePasteText(text);
+    if(!rows.length) return;
+    const maxC = Math.max(...rows.map(r=>r.length), 1);
+    const nVar = gridHead.querySelectorAll("th").length - 1;
+    let nBody = gridBody.querySelectorAll("tr").length;
+    for(let c = nVar; c < originCol + maxC; c++) addGridCol();
+    const needBody = Math.max(0, originRow + rows.length - 1);
+    for(let r = nBody; r < needBody; r++) addGridRow();
+    const ths = gridHead.querySelectorAll("th");
+    const trs = gridBody.querySelectorAll("tr");
+    rows.forEach((row, i)=>{
+      const r = originRow + i;
+      row.forEach((v, j)=>{
+        const c = originCol + j + 1;
+        let inp = null;
+        if(r === 0 && ths[c]) inp = ths[c].querySelector("input");
+        else if(r >= 1 && trs[r - 1]){ const tds = trs[r - 1].querySelectorAll("td"); if(tds[c]) inp = tds[c].querySelector("input"); }
+        if(inp) inp.value = v;
+      });
+    });
+    populateStatsDropdowns();
   }
-  function statsSummary(nums){
-    const n=nums.length, mu=mean(nums), med=median(nums), mo=mode(nums);
-    const varP=variance(nums,false), sdP=Math.sqrt(varP);
-    const varS=(n>=2)?variance(nums,true):NaN, sdS=(n>=2)?Math.sqrt(varS):NaN;
-    const a=[...nums].sort((x,y)=>x-y);
-    return {n,mu,med,mo,varP,sdP,varS,sdS,min:a[0],max:a[a.length-1],range:a[a.length-1]-a[0]};
-  }
-  function renderStatsBox(s){
-    const lines=[];
-    lines.push(`n = ${s.n}`);
-    lines.push(`min = ${fmt(s.min)}, max = ${fmt(s.max)}, range = ${fmt(s.range)}`);
-    lines.push(`μέση τιμή (x̄) = ${fmt(s.mu)}`);
-    lines.push(`διάμεσος = ${fmt(s.med)}`);
-    lines.push(`επικρατούσα = ${s.mo.length ? s.mo.map(fmt).join(', ') : '—'}`);
-    lines.push(`σ² (πληθ.) = ${fmt(s.varP)}   |   σ = ${fmt(s.sdP)}`);
-    if(s.n>=2){ lines.push(`s² (δείγμα) = ${fmt(s.varS)} |   s = ${fmt(s.sdS)}`); }
-    return lines.join("\n");
-  }
-  document.getElementById("stats-calc-btn").addEventListener("click", () => {
-    const nums=parseNumbers(statsData.value);
-    if(!nums.length){statsResults.textContent="Δώσε δεδομένα πρώτα.";return;}
-    statsResults.textContent=renderStatsBox(statsSummary(nums));
+
+  document.getElementById("grid-add-row").addEventListener("click", addGridRow);
+  document.getElementById("grid-add-col").addEventListener("click", addGridCol);
+  document.getElementById("grid-paste").addEventListener("click", ()=>{
+    navigator.clipboard.readText().then(t=>{
+      const pos = getFocusedGridCell();
+      const r0 = pos ? pos.row : 0, c0 = pos ? pos.col : 0;
+      doPaste(r0, c0, t);
+    }).catch(()=>{ statsResults.textContent="Δεν επιτρέπεται πρόσβαση στο clipboard."; });
   });
-  document.getElementById("stats-insert-btn").addEventListener("click", () => {
-    const nums=parseNumbers(statsData.value);
-    if(!nums.length){statsResults.textContent="Δώσε δεδομένα πρώτα.";return;}
-    const s=statsSummary(nums);
-    appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nΔεδομένα: ${nums.join(", ")}\nΣύνοψη:\n${renderStatsBox(s)}\n`);
+
+  const gridWrap = document.getElementById("variables-grid-wrap");
+  if(gridWrap){
+    gridWrap.addEventListener("paste", (e)=>{
+      const pos = getFocusedGridCell();
+      if(!pos) return;
+      e.preventDefault();
+      const t = (e.clipboardData || window.clipboardData)?.getData("text/plain");
+      if(!t) return;
+      doPaste(pos.row, pos.col, t);
+    });
+  }
+
+  const statVarIds = ["descriptive-var1","descriptive-var2","descriptive-cat","normal-var","normal-cat","ci-var","ci-cat","ttest-var1","ttest-var2","ttest-cat","anova-var","anova-cat","chi-var1","chi-var2","reg-x","reg-y","reg-cat"];
+  function populateStatsDropdowns(){
+    const d = getGridData();
+    const cols = Object.keys(d).filter(Boolean);
+    const opt = (v,l)=> { const o = document.createElement("option"); o.value=v; o.textContent=l||v; return o; };
+    const catIds = ["descriptive-cat","normal-cat","ci-cat","ttest-cat","reg-cat"];
+    const noneIds = ["descriptive-var2"];
+    statVarIds.forEach(id=>{
+      const sel = document.getElementById(id);
+      if(!sel) return;
+      const prev = sel.value;
+      sel.innerHTML = "";
+      if(catIds.includes(id) || noneIds.includes(id)) sel.appendChild(opt("", "— Καμία —"));
+      else sel.appendChild(opt("", "— Επίλεξε —"));
+      cols.forEach(c=> sel.appendChild(opt(c)));
+      if(cols.includes(prev)) sel.value = prev;
+    });
+  }
+  populateStatsDropdowns();
+  gridHead.addEventListener("input", ()=> setTimeout(populateStatsDropdowns, 0));
+  gridBody.addEventListener("input", ()=> setTimeout(populateStatsDropdowns, 0));
+
+  (function gridNav(){
+    const grid = document.getElementById("variables-grid");
+    const wrap = document.getElementById("variables-grid-wrap");
+    if(!grid || !wrap) return;
+    function getInputs(){ return grid.querySelectorAll("input"); }
+    function getCols(){ const n = grid.querySelector("#variables-grid-head")?.querySelectorAll("th").length || 0; return Math.max(0, n - 1); }
+    function focusedIndex(){
+      const inputs = getInputs(), el = document.activeElement;
+      if(!el || !el.matches("input") || !grid.contains(el)) return -1;
+      return [...inputs].indexOf(el);
+    }
+    function moveFocus(deltaRow, deltaCol){
+      const inputs = getInputs(), cols = getCols();
+      if(!cols || !inputs.length) return;
+      const i = focusedIndex();
+      if(i < 0) return;
+      const row = Math.floor(i / cols), col = i % cols;
+      let r = row + deltaRow, c = col + deltaCol;
+      if(deltaCol !== 0 && c >= cols){ r++; c = 0; }
+      else if(deltaCol !== 0 && c < 0){ r--; c = cols - 1; }
+      r = Math.max(0, Math.min(r, Math.ceil(inputs.length / cols) - 1));
+      c = Math.max(0, Math.min(c, cols - 1));
+      const ni = r * cols + c;
+      if(ni >= 0 && ni < inputs.length){ inputs[ni].focus(); }
+    }
+    function moveNext(back){
+      const inputs = getInputs(), i = focusedIndex();
+      if(i < 0) return;
+      let ni = back ? i - 1 : i + 1;
+      if(ni < 0) ni = inputs.length - 1;
+      else if(ni >= inputs.length) ni = 0;
+      inputs[ni].focus();
+    }
+    wrap.addEventListener("keydown", (e)=>{
+      if(!grid.contains(e.target) || !e.target.matches("input")) return;
+      const k = e.key;
+      if(k==="ArrowLeft"){ e.preventDefault(); moveFocus(0,-1); }
+      else if(k==="ArrowRight"){ e.preventDefault(); moveFocus(0,1); }
+      else if(k==="ArrowUp"){ e.preventDefault(); moveFocus(-1,0); }
+      else if(k==="ArrowDown"){ e.preventDefault(); moveFocus(1,0); }
+      else if(k==="Tab" && !e.shiftKey){ e.preventDefault(); moveNext(false); }
+      else if(k==="Tab" && e.shiftKey){ e.preventDefault(); moveNext(true); }
+    });
+    wrap.addEventListener("wheel", (e)=>{
+      const el = document.activeElement;
+      if(!el || !el.matches("input") || !grid.contains(el)) return;
+      e.preventDefault();
+      moveFocus(e.deltaY > 0 ? 1 : -1, 0);
+    }, { passive: false });
+  })();
+
+  document.querySelectorAll("[data-stats-tool]").forEach(tab=>{
+    tab.addEventListener("click", ()=>{
+      document.querySelectorAll("[data-stats-tool]").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      document.querySelectorAll(".stats-subpanel").forEach(p=>{ p.classList.remove("active"); p.style.display="none"; });
+      const pid = "stats-panel-" + tab.dataset.statsTool;
+      const pan = document.getElementById(pid);
+      if(pan){ pan.classList.add("active"); pan.style.display="block"; }
+    });
+  });
+
+  async function checkStatsServer(){
+    const el = document.getElementById("stats-server-status");
+    try {
+      const r = await fetch(`${BASE_URL}/`);
+      const ok = r.ok;
+      el.textContent = ok ? "✅ Συνδέθηκε (" + BASE_URL + ")" : "❌ Not connected (" + BASE_URL + ")";
+      el.style.color = ok ? "#0f766e" : "#dc2626";
+    } catch(e) {
+      el.textContent = "❌ Not connected (" + BASE_URL + ")";
+      el.style.color = "#dc2626";
+    }
+  }
+  checkStatsServer();
+  document.getElementById("stats-server-test").addEventListener("click", checkStatsServer);
+
+  function mean(arr){ const a = arr.filter(x=>Number.isFinite(+x)); return a.length ? a.reduce((s,x)=>s+Number(x),0)/a.length : NaN; }
+  function fmt(x){ if(!Number.isFinite(x)) return String(x); const a=Math.abs(x); return (a>=1000||a<0.001) ? x.toExponential(4) : x.toFixed(4).replace(/\.?0+$/,""); }
+  function quantile(sorted, p){
+    const n = sorted.length; if(!n) return NaN;
+    const i = (n-1)*p, lo = Math.floor(i), hi = Math.ceil(i);
+    if(lo===hi) return sorted[lo];
+    return sorted[lo] + (i-lo)*(sorted[hi]-sorted[lo]);
+  }
+  function modeNumeric(arr){
+    const m = new Map();
+    arr.forEach(x=> m.set(x, (m.get(x)||0)+1));
+    let best = [], maxC = 0;
+    m.forEach((c,v)=>{ if(c>maxC){ maxC=c; best=[v]; } else if(c===maxC) best.push(v); });
+    return maxC<=1 ? [] : best.sort((a,b)=>a-b);
+  }
+  function variance(arr, sample){ const a=arr.filter(x=>Number.isFinite(+x)); const n=a.length; if(n<2) return NaN; const mu=mean(a), s=a.reduce((q,x)=>q+(x-mu)*(x-mu),0); return sample ? s/(n-1) : s/n; }
+  function descriptiveBlock(name, raw){
+    const out = [];
+    if(!raw.length) return out;
+    const nums = raw.map(x=>Number(x)).filter(Number.isFinite);
+    const mostlyNumeric = nums.length >= raw.length * 0.5;
+    if(mostlyNumeric && nums.length>=1){
+      const n = nums.length, sorted = [...nums].sort((a,b)=>a-b);
+      const mu = mean(nums), med = quantile(sorted, 0.5), q1 = quantile(sorted, 0.25), q3 = quantile(sorted, 0.75);
+      const iqr = q3 - q1, rng = sorted[n-1] - sorted[0];
+      const s2 = variance(nums, true), s = Math.sqrt(s2), s2p = variance(nums, false), sp = Math.sqrt(s2p);
+      const mo = modeNumeric(nums);
+      const zArr = s > 0 ? nums.map(x => (x - mu) / s) : [];
+      const zMin = zArr.length ? Math.min(...zArr) : NaN, zMax = zArr.length ? Math.max(...zArr) : NaN;
+      out.push(`——— ${name} (αριθμητική) ———`);
+      out.push(`n = ${n}   min = ${fmt(sorted[0])}   max = ${fmt(sorted[n-1])}   ευρός = ${fmt(rng)}`);
+      out.push(`μέση τιμή (x̄) = ${fmt(mu)}   διάμεσος = ${fmt(med)}   επικρατούσα = ${mo.length ? mo.map(fmt).join(", ") : "—"}`);
+      out.push(`Q₁ = ${fmt(q1)}   Q₃ = ${fmt(q3)}   IQR = ${fmt(iqr)}`);
+      out.push(`s² (δείγμα) = ${fmt(s2)}   s (τυπ. απόκλ.) = ${fmt(s)}`);
+      out.push(`σ² (πληθ.) = ${fmt(s2p)}   σ = ${fmt(sp)}`);
+      if (s > 0) out.push(`z-score: z = (x − x̄)/s   →  z_min = ${fmt(zMin)}   z_max = ${fmt(zMax)}`);
+      else out.push(`z-score: z = (x − x̄)/s (s=0 → απροσδιόριστο)`);
+    } else {
+      const freq = new Map();
+      raw.forEach(x=> freq.set(x, (freq.get(x)||0)+1));
+      const entries = [...freq.entries()].sort((a,b)=>b[1]-a[1]);
+      const moda = entries.filter(([_,c])=> c===entries[0][1]).map(([v])=>v).join(", ");
+      out.push(`——— ${name} (κατηγορική) ———`);
+      out.push(`n = ${raw.length}   επικρατούσα = ${moda || "—"}`);
+      entries.forEach(([v,c])=> out.push(`  ${v}: ${c}`));
+    }
+    return out;
+  }
+  function descriptiveGrid(){
+    const var1 = document.getElementById("descriptive-var1")?.value?.trim();
+    const var2 = (document.getElementById("descriptive-var2")?.value || "").trim() || null;
+    const cat = (document.getElementById("descriptive-cat")?.value || "").trim() || null;
+    if(!var1){ statsResults.textContent = "Επίλεξε τουλάχιστον μεταβλητή 1."; return; }
+    const d = getGridData();
+    if(!d[var1] || !d[var1].length){ statsResults.textContent = "Δεν υπάρχουν δεδομένα για αυτή τη μεταβλητή."; return; }
+    const vars = [var1]; if(var2 && d[var2]) vars.push(var2);
+    const lines = [];
+    const n = d[var1].length;
+    if(cat && d[cat]){
+      const groups = new Map();
+      for(let i = 0; i < n; i++){
+        const g = String(d[cat][i] ?? "").trim();
+        if(!g) continue;
+        if(!groups.has(g)){ const o = {}; vars.forEach(v=>{ o[v]=[]; }); groups.set(g, o); }
+        const row = groups.get(g);
+        vars.forEach(v=> row[v].push(String(d[v][i] ?? "").trim()));
+      }
+      const sortedGroups = [...groups.entries()].sort((a,b)=>String(a[0]).localeCompare(String(b[0])));
+      sortedGroups.forEach(([g, row], idx)=>{
+        if(idx) lines.push("");
+        lines.push(`====== Κατηγορία: ${g} ======`);
+        vars.forEach(v=>{
+          const raw = (row[v]||[]).filter(Boolean);
+          lines.push(...descriptiveBlock(v, raw));
+          if(raw.length) lines.push("");
+        });
+      });
+    } else {
+      vars.forEach(v=>{
+        const raw = (d[v]||[]).map(x=>String(x).trim()).filter(Boolean);
+        lines.push(...descriptiveBlock(v, raw));
+        if(raw.length) lines.push("");
+      });
+    }
+    statsResults.textContent = lines.length ? lines.join("\n").trim() : "Δεν βρέθηκαν δεδομένα.";
+  }
+
+  document.getElementById("descriptive-btn").addEventListener("click", descriptiveGrid);
+  document.getElementById("descriptive-clear").addEventListener("click", ()=>{
+    document.getElementById("descriptive-var1").value = "";
+    document.getElementById("descriptive-var2").value = "";
+    document.getElementById("descriptive-cat").value = "";
+    statsResults.textContent = "";
+  });
+  document.getElementById("stats-insert-btn").addEventListener("click", ()=>{
+    appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\n${statsResults.textContent || ""}\n`);
     textInput.focus();
   });
-  document.getElementById("stats-clear-btn").addEventListener("click", () => { statsData.value=""; statsResults.textContent=""; });
-  document.getElementById("stats-ci-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Διάστημα Εμπιστοσύνης: δώσε επίπεδο (π.χ. 95%), n, σ γνωστή/άγνωστη.`); textInput.focus(); });
-  document.getElementById("stats-z-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate z-score: z=(x-μ)/σ και ερμηνεία.`); textInput.focus(); });
-  document.getElementById("stats-test-btn").addEventListener("click", () => { appendToTextContext(`${addToolHeader("ΣΤΑΤΙΣΤΙΚΗ")}\nTemplate Έλεγχος Υπόθεσης: H0/H1, α, στατιστικό (z ή t), συμπέρασμα.`); textInput.focus(); });
+  document.getElementById("stats-clear-btn").addEventListener("click", ()=>{ initGrid(); populateStatsDropdowns(); statsResults.textContent=""; });
+
+  async function postStats(path, body){
+    const r = await fetch(`${BASE_URL}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if(!r.ok) throw new Error(j.detail || "Σφάλμα");
+    return j;
+  }
+  function showStatsJson(j){ statsResults.textContent = JSON.stringify(j, null, 2); }
+
+  document.getElementById("normal-btn").addEventListener("click", async ()=>{
+    const data = getGridData(), v = document.getElementById("normal-var").value, cat = document.getElementById("normal-cat").value || null;
+    const method = document.querySelector("input[name=normal-method]:checked").value;
+    if(!v){ statsResults.textContent="Επίλεξε μεταβλητή."; return; }
+    statsResults.textContent="Υπολογισμός…";
+    try{ const j = await postStats("/stats/normal", { data, var: v, method, category: cat }); showStatsJson(j); } catch(e){ statsResults.textContent="Σφάλμα: "+e.message; }
+  });
+  document.getElementById("normal-clear").addEventListener("click", ()=>{ document.getElementById("normal-var").value=""; document.getElementById("normal-cat").value=""; statsResults.textContent=""; });
+
+  document.getElementById("ci-btn").addEventListener("click", async ()=>{
+    const data = getGridData(), v = document.getElementById("ci-var").value, cat = document.getElementById("ci-cat").value || null;
+    const level = parseFloat(document.getElementById("ci-level").value) || 95;
+    const sig = document.getElementById("ci-sigma").value; const sigma = sig === "" ? null : parseFloat(sig);
+    if(!v){ statsResults.textContent="Επίλεξε μεταβλητή."; return; }
+    statsResults.textContent="Υπολογισμός…";
+    try{ const j = await postStats("/stats/ci", { data, var: v, level, sigma, category: cat }); showStatsJson(j); } catch(e){ statsResults.textContent="Σφάλμα: "+e.message; }
+  });
+  document.getElementById("ci-clear").addEventListener("click", ()=>{ document.getElementById("ci-var").value=""; document.getElementById("ci-cat").value=""; statsResults.textContent=""; });
+
+  document.getElementById("ttest-btn").addEventListener("click", async ()=>{
+    const data = getGridData(), v1 = document.getElementById("ttest-var1").value, v2 = document.getElementById("ttest-var2").value || null, cat = document.getElementById("ttest-cat").value || null;
+    const type_ = document.querySelector("input[name=ttest-type]:checked").value, mu0 = parseFloat(document.getElementById("ttest-mu0").value) || 0;
+    const alt = document.getElementById("ttest-alt").value;
+    if(!v1){ statsResults.textContent="Επίλεξε μεταβλητή 1."; return; }
+    statsResults.textContent="Υπολογισμός…";
+    try{ const j = await postStats("/stats/ttest", { data, var1: v1, var2: v2, type: type_, mu0, alternative: alt, category: cat }); showStatsJson(j); } catch(e){ statsResults.textContent="Σφάλμα: "+e.message; }
+  });
+  document.getElementById("ttest-clear").addEventListener("click", ()=>{ document.getElementById("ttest-var1").value=""; document.getElementById("ttest-var2").value=""; document.getElementById("ttest-cat").value=""; statsResults.textContent=""; });
+
+  document.getElementById("anova-btn").addEventListener("click", async ()=>{
+    const data = getGridData(), v = document.getElementById("anova-var").value, cat = document.getElementById("anova-cat").value;
+    if(!v || !cat){ statsResults.textContent="Επίλεξε μεταβλητή και κατηγορική."; return; }
+    statsResults.textContent="Υπολογισμός…";
+    try{ const j = await postStats("/stats/anova", { data, var: v, category: cat }); showStatsJson(j); } catch(e){ statsResults.textContent="Σφάλμα: "+e.message; }
+  });
+  document.getElementById("anova-clear").addEventListener("click", ()=>{ document.getElementById("anova-var").value=""; document.getElementById("anova-cat").value=""; statsResults.textContent=""; });
+
+  document.getElementById("chi-btn").addEventListener("click", async ()=>{
+    const data = getGridData(), v1 = document.getElementById("chi-var1").value, v2 = document.getElementById("chi-var2").value;
+    if(!v1 || !v2){ statsResults.textContent="Επίλεξε και τις δύο μεταβλητές."; return; }
+    statsResults.textContent="Υπολογισμός…";
+    try{ const j = await postStats("/stats/chisquare", { data, var1: v1, var2: v2 }); showStatsJson(j); } catch(e){ statsResults.textContent="Σφάλμα: "+e.message; }
+  });
+  document.getElementById("chi-clear").addEventListener("click", ()=>{ document.getElementById("chi-var1").value=""; document.getElementById("chi-var2").value=""; statsResults.textContent=""; });
+
+  document.getElementById("reg-btn").addEventListener("click", async ()=>{
+    const data = getGridData(), x = document.getElementById("reg-x").value, y = document.getElementById("reg-y").value, cat = document.getElementById("reg-cat").value || null;
+    if(!x || !y){ statsResults.textContent="Επίλεξε X και Y."; return; }
+    statsResults.textContent="Υπολογισμός…";
+    try{ const j = await postStats("/stats/regression", { data, x, y, category: cat }); showStatsJson(j); } catch(e){ statsResults.textContent="Σφάλμα: "+e.message; }
+  });
+  document.getElementById("reg-clear").addEventListener("click", ()=>{ document.getElementById("reg-x").value=""; document.getElementById("reg-y").value=""; document.getElementById("reg-cat").value=""; statsResults.textContent=""; });
+
+  document.getElementById("excel-btn").addEventListener("click", async ()=>{
+    const f = document.getElementById("excel-file").files[0], sheet = document.getElementById("excel-sheet").value.trim() || null;
+    if(!f){ statsResults.textContent="Επίλεξε αρχείο Excel."; return; }
+    statsResults.textContent="Εισαγωγή…";
+    const fd = new FormData(); fd.append("file", f); if(sheet) fd.append("sheet", sheet);
+    try {
+      const r = await fetch(`${BASE_URL}/stats/excel`, { method: "POST", body: fd });
+      const j = await r.json();
+      if(!r.ok) throw new Error(j.detail || "Σφάλμα");
+      const { data: cols, columns } = j;
+      const curC = gridHead.querySelectorAll("th").length - 1;
+      columns.forEach((c,i)=>{ if(i>=curC) addGridCol(); });
+      const trs = gridBody.querySelectorAll("tr");
+      const nRows = Math.max(...Object.values(cols).map(a=>a.length), 0);
+      for(let r = trs.length; r < nRows; r++) addGridRow();
+      const rows = gridBody.querySelectorAll("tr");
+      columns.forEach((c,i)=>{ const inp = gridHead.querySelectorAll("th")[i+1]?.querySelector("input"); if(inp) inp.value = c; });
+      Object.entries(cols).forEach(([col, vals])=>{
+        const ci = columns.indexOf(col);
+        if(ci===-1) return;
+        vals.forEach((v,ri)=>{ const cell = rows[ri]?.querySelectorAll("td")[ci+1]?.querySelector("input"); if(cell) cell.value = v; });
+      });
+      populateStatsDropdowns();
+      statsResults.textContent = `Εισήχθησαν ${j.n_rows} γραμμές, ${columns.length} στήλες.`;
+    } catch(e){ statsResults.textContent = "Σφάλμα: " + e.message; }
+  });
+  document.getElementById("excel-clear").addEventListener("click", ()=>{ document.getElementById("excel-file").value=""; document.getElementById("excel-sheet").value=""; statsResults.textContent=""; });
+
+  document.getElementById("ai-stats-btn").addEventListener("click", async ()=>{
+    let data = document.getElementById("ai-stats-data").value.trim();
+    const q = document.getElementById("ai-stats-query").value.trim();
+    if(!q){ statsResults.textContent="Γράψε μια ερώτηση."; return; }
+    if(!data){ const d = getGridData(); data = JSON.stringify(d); }
+    statsResults.textContent="Απάντηση AI…";
+    try {
+      const r = await fetch(`${BASE_URL}/ask`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: `Στατιστική ερώτηση. Δεδομένα (JSON):\n${data}\n\nΕρώτηση: ${q}\n\nΑπάντησε στα ελληνικά.` }) });
+      const j = await r.json();
+      if(!r.ok) throw new Error(j.detail || "Σφάλμα");
+      statsResults.textContent = j.answer || "—";
+    } catch(e){ statsResults.textContent = "Σφάλμα: " + e.message; }
+  });
+  document.getElementById("ai-stats-clear").addEventListener("click", ()=>{ document.getElementById("ai-stats-data").value=""; document.getElementById("ai-stats-query").value=""; statsResults.textContent=""; });
+
 
   /* ===================== INK MODAL ===================== */
   (function(){
