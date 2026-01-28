@@ -1735,6 +1735,9 @@
         body: JSON.stringify({prompt, mode})
       });
       if (!res.ok){
+        if (res.status === 404){
+          throw new Error("404: Το GeoGebra AI δεν βρέθηκε. Ο server (Render) τρέχει παλιό κώδικα. Άνοιξε " + BASE_URL + "/geogebra στο browser — αν δεν δεις {\"status\":\"ok\"}, κάνε Redeploy στο Render.");
+        }
         throw new Error("Server error: " + res.status);
       }
       const data = await res.json();
