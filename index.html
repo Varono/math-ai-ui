@@ -129,6 +129,7 @@
     .ggb-ai-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
     .ggb-ai-icon{font-size:1.4rem}
     .ggb-ai-title{font-weight:700;color:#0369a1;font-size:1rem}
+    .ggb-ai-badge{font-size:0.75rem;padding:2px 8px;border-radius:6px;background:#0ea5e9;color:#fff;margin-left:auto}
     .ggb-ai-input-row{display:flex;gap:8px}
     .ggb-ai-input-row input{
       flex:1;
@@ -498,6 +499,7 @@
           <div class="ggb-ai-header">
             <span class="ggb-ai-icon">🤖</span>
             <span class="ggb-ai-title">GeoGebra AI Βοηθός</span>
+            <span class="ggb-ai-badge" id="ggb-backend-badge">—</span>
           </div>
           <div class="ggb-ai-input-row">
             <input type="text" id="ggb-ai-prompt" placeholder="π.χ. τρίγωνο 3,4,5 | applet παραβολής με slider | animation σημείου σε κύκλο" />
@@ -793,6 +795,7 @@
     <!-- ===== STATS ===== -->
     <div class="tool-panel" id="tool-stats">
       <div style="margin-bottom:12px; padding:8px 12px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; font-size:0.85rem; display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+        <span><b>Λειτουργία:</b> <span id="backend-mode">—</span></span>
         <span><b>Server:</b> <span id="stats-server-status">Έλεγχος…</span></span>
         <button class="btn ghost" id="stats-server-test" type="button" style="padding:4px 10px; font-size:0.8rem">Test</button>
       </div>
@@ -1067,6 +1070,11 @@
     /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname)
   ));
   const BASE_URL = isLocal ? "http://127.0.0.1:8003" : "https://math-ai-server.onrender.com";
+  const modeLabel = isLocal ? "Τοπικά" : "Online";
+  const elMode = document.getElementById("backend-mode");
+  if (elMode) elMode.textContent = modeLabel;
+  const ggbBadge = document.getElementById("ggb-backend-badge");
+  if (ggbBadge) ggbBadge.textContent = modeLabel;
 
   /* ===================== TOAST ===================== */
   const toast = document.getElementById("answer-toast");
