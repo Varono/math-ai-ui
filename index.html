@@ -1061,8 +1061,12 @@
 <script src="https://www.geogebra.org/apps/deployggb.js"></script>
 <script>
   /* ===================== SERVER ===================== */
-  // Production server URL
-  const BASE_URL = "https://math-ai-server.onrender.com";
+  // Auto-detect: local (file/localhost) → local server; else → Render
+  const isLocal = (typeof window !== "undefined" && (
+    window.location.protocol === "file:" ||
+    /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname)
+  ));
+  const BASE_URL = isLocal ? "http://127.0.0.1:8003" : "https://math-ai-server.onrender.com";
 
   /* ===================== TOAST ===================== */
   const toast = document.getElementById("answer-toast");
