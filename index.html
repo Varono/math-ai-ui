@@ -2,6 +2,8 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%232563eb' width='32' height='32' rx='6'/%3E%3Ctext x='16' y='22' font-size='18' font-family='sans-serif' fill='white' text-anchor='middle'%3EM%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#111827" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -130,6 +132,9 @@
     .ggb-ai-icon{font-size:1.4rem}
     .ggb-ai-title{font-weight:700;color:#0369a1;font-size:1rem}
     .ggb-ai-badge{font-size:0.75rem;padding:2px 8px;border-radius:6px;background:#0ea5e9;color:#fff;margin-left:auto}
+    .file-protocol-warn{margin-top:10px;padding:10px 14px;background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;font-size:0.9rem;color:#92400e}
+    .file-protocol-warn.is-hidden{display:none}
+    .file-protocol-warn code{background:#fde68a;padding:2px 6px;border-radius:4px;font-size:0.85em}
     .ggb-ai-input-row{display:flex;gap:8px}
     .ggb-ai-input-row input{
       flex:1;
@@ -493,6 +498,9 @@
               <span class="muted"><b>Πλέγμα</b></span>
             </label>
           </div>
+        </div>
+        <div id="file-protocol-warn" class="file-protocol-warn is-hidden" role="alert">
+          ⚠️ Ανοιγμένο ως <code>file://</code> — οι κλήσεις στο API μπλοκάρουν («Failed to fetch»). Τρέξε <code>serve-ui.bat</code> και άνοιξε <strong>http://localhost:8080</strong>.
         </div>
         <!-- GeoGebra AI Assistant -->
         <div class="ggb-ai-assistant">
@@ -1064,17 +1072,24 @@
 <script src="https://www.geogebra.org/apps/deployggb.js"></script>
 <script>
   /* ===================== SERVER ===================== */
-  // Auto-detect: local (file/localhost) → local server; else → Render
+  // Auto-detect: local → local API; staging hostname → staging API; else → production
   const isLocal = (typeof window !== "undefined" && (
     window.location.protocol === "file:" ||
     /^localhost$|^127\.0\.0\.1$/i.test(window.location.hostname)
   ));
-  const BASE_URL = isLocal ? "http://127.0.0.1:8003" : "https://math-ai-server.onrender.com";
-  const modeLabel = isLocal ? "Τοπικά" : "Online";
+  const isStaging = typeof window !== "undefined" && /staging/i.test(window.location.hostname);
+  const BASE_URL = isLocal
+    ? "http://127.0.0.1:8003"
+    : isStaging
+      ? "https://math-ai-server-staging.onrender.com"
+      : "https://math-ai-server.onrender.com";
+  const modeLabel = isLocal ? "Τοπικά" : isStaging ? "Staging" : "Online";
   const elMode = document.getElementById("backend-mode");
   if (elMode) elMode.textContent = modeLabel;
   const ggbBadge = document.getElementById("ggb-backend-badge");
   if (ggbBadge) ggbBadge.textContent = modeLabel;
+  const fileWarn = document.getElementById("file-protocol-warn");
+  if (fileWarn && window.location.protocol === "file:") fileWarn.classList.remove("is-hidden");
 
   /* ===================== TOAST ===================== */
   const toast = document.getElementById("answer-toast");
@@ -1797,7 +1812,10 @@
 
     } catch (err){
       ggbAiLoading?.classList.add("is-hidden");
-      alert("Σφάλμα σύνδεσης με τον server: " + err.message);
+      let msg = "Σφάλμα σύνδεσης με τον server: " + err.message;
+      if (typeof isLocal !== "undefined" && isLocal && /fetch|network|Failed/i.test(String(err.message)))
+        msg += "\n\nΈλεγξε: τρέχει το API (start-server.bat στο math-ai-server); Ή τρέξε run-all.bat στο φάκελο Project.";
+      alert(msg);
     }
   }
 
@@ -1826,8 +1844,30 @@
       alert("Άνοιξε πρώτα το GeoGebra!");
       return;
     }
-    // Reset GeoGebra to initial state
-    window.ggbApplet.reset();
+    // 1) Clear GeoGebra (try best available method)
+    try {
+      if (typeof window.ggbApplet.reset === "function"){
+        window.ggbApplet.reset();
+      } else if (typeof window.ggbApplet.newConstruction === "function"){
+        window.ggbApplet.newConstruction();
+      } else if (typeof window.ggbApplet.evalCommand === "function"){
+        // GeoGebra command that clears construction
+        window.ggbApplet.evalCommand("Delete[]");
+      }
+    } catch (e){
+      console.warn("GeoGebra clear failed", e);
+    }
+
+    // 2) Clear AI output UI too
+    currentGgbCommands = [];
+    if (ggbAiCommands) ggbAiCommands.textContent = "";
+    if (ggbAiExplanation) ggbAiExplanation.textContent = "";
+    if (ggbAiNotes) ggbAiNotes.textContent = "";
+    if (ggbAiResponse) ggbAiResponse.classList.add("is-hidden");
+    if (ggbAiLoading) ggbAiLoading.classList.add("is-hidden");
+    if (ggbAiCommandsWrap) ggbAiCommandsWrap.style.display = "none";
+    if (ggbAiActionBtns) ggbAiActionBtns.style.display = "none";
+    if (ggbAiPrompt) ggbAiPrompt.value = "";
   }
 
   if (ggbAiHelpBtn){
