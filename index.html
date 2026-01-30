@@ -68,10 +68,10 @@
     #keyboard-rows .key{font-size:18px}
     .key-sep{background:transparent;border:none;box-shadow:none;cursor:default;pointer-events:none;margin:2px}
     .kbd-cols{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
-    .kbd-left{display:flex;flex-direction:column;gap:6px}
-    .kbd-left > div{display:flex;flex-wrap:wrap;gap:4px}
+    .kbd-left{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .kbd-left > div{display:grid;grid-template-columns:repeat(5, 1fr);gap:4px}
     .kbd-right{display:flex;flex-direction:column;gap:6px;min-width:0}
-    .kbd-right-row{display:grid;grid-template-columns:repeat(5, 1fr);gap:4px}
+    .kbd-right-row{display:grid;grid-template-columns:repeat(4, 1fr);gap:4px}
     .kbd-right .key-sep{min-width:0}
 
     .imgwrap{display:grid;gap:8px;margin-top:6px}
@@ -965,8 +965,8 @@
   /* ===================== KEYBOARD ===================== */
   const keyboardLayouts = {
     num: {
-      left: [['x','y','z','π','e'],['x²','xⁿ','a/b','√','ⁿ√'],['≤','≥','<','>'],['=','|x|','∞','Σ'],[' ']],
-      right: [['7','8','9','×','÷'],['4','5','6','+','−'],['1','2','3','sep','sep'],['0','.','sep','sep','sep']]
+      left: [['x','y','z','π','e'],['x²','xⁿ','a/b','n!','√'],['≤','≥','<','>','ⁿ√'],['Σ','|x|','∞','sep','sep'],[' ','nPr','nCr','sep','sep']],
+      right: [['7','8','9','×'],['4','5','6','÷'],['1','2','3','+'],['0','.','=','−']]
     },
     func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','∫_{a}^{b}'],['sec(x)','csc(x)','π∫','∬','∬_{D}','dx'],['lim','+∞','-∞','=',' ']],
     abc: [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','(',')'],['=',' ']],
@@ -981,6 +981,9 @@
     else if (label === 'x²') insertText = 'x^2';
     else if (label === 'xⁿ') insertText = 'x^';
     else if (label === 'a/b') insertText = '/';
+    else if (label === 'n!') insertText = '!';
+    else if (label === 'nPr') insertText = 'P(n,r)';
+    else if (label === 'nCr') insertText = 'C(n,r)';
     else if (label === 'ln') insertText = '\\ln(';
     else if (label === 'log₁₀') insertText = '\\log_{10}(';
     else if (label === 'log₍b₎') insertText = '\\log_{b}(';
