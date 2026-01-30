@@ -70,6 +70,11 @@
     .kbd-cols{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
     .kbd-left{display:flex;flex-direction:column;gap:6px;min-width:0}
     .kbd-left > div{display:grid;grid-template-columns:repeat(5, 1fr);gap:4px}
+    .kbd-abc-left > div{display:grid;grid-template-columns:repeat(6, 1fr);gap:4px}
+    .kbd-abc-right > div{display:flex;flex-wrap:wrap;gap:4px}
+    .kbd-abc-sep-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .kbd-abc-sep-col > div{display:flex}
+    .kbd-abc-sep-col .key-sep{min-width:2em}
     .kbd-right{display:flex;flex-direction:column;gap:6px;min-width:0}
     .kbd-right-row{display:grid;grid-template-columns:repeat(4, 1fr);gap:4px}
     .kbd-right .key-sep{min-width:0}
@@ -969,7 +974,10 @@
       right: [['7','8','9','×'],['4','5','6','÷'],['1','2','3','+'],['0','.','=','−'],['(',')','[',']']]
     },
     func: [['sin','cos','tan','ln','log₁₀','log₍b₎'],['sin⁻¹','cos⁻¹','tan⁻¹','d/dx','∫','∫_{a}^{b}'],['sec(x)','csc(x)','π∫','∬','∬_{D}','dx'],['lim','+∞','-∞','=',' ']],
-    abc: [['q','w','e','r','t','y','u','i','o','p'],['a','s','d','f','g','h','j','k','l'],['z','x','c','v','b','n','m','(',')'],['=',' ']],
+    abc: {
+      left: [['a','b','c','d','e','f'],['g','h','i','j','k','l'],['m','n','o','p','q','r'],['s','t','u','v','w','x'],['y','z','sep','sep','sep','sep']],
+      right: [['α','β','γ','δ','ε','ζ'],['η','θ','ι','κ','λ','μ'],['ν','ξ','ο','π','ρ','σ'],['τ','υ','φ','χ','ψ','ω']]
+    },
     sym: [['#','&','¬','≈','≠','∞'],['≤','≥','∈','∉','⇒','⇔'],['⊂','⊆','⊄','⊇','|','‖'],['=',' ']]
   };
   const keyboardRows = document.getElementById("keyboard-rows");
@@ -1015,25 +1023,36 @@
   function loadKeyboard(name){
     keyboardRows.innerHTML = "";
     const layout = keyboardLayouts[name];
-    if (name === "num" && layout.left) {
+    if ((name === "num" || name === "abc") && layout.left) {
       const cols = document.createElement("div");
       cols.className = "kbd-cols";
       const leftCell = document.createElement("div");
-      leftCell.className = "kbd-left";
+      leftCell.className = name === "abc" ? "kbd-left kbd-abc-left" : "kbd-left";
       layout.left.forEach(row => {
         const wrap = document.createElement("div");
+        if (name === "abc") wrap.className = "kbd-abc-row";
         row.forEach(label => addKey(wrap, label));
         leftCell.appendChild(wrap);
       });
+      cols.appendChild(leftCell);
+      if (name === "abc") {
+        const sepCol = document.createElement("div");
+        sepCol.className = "kbd-abc-sep-col";
+        for (let i = 0; i < layout.left.length; i++) {
+          const wrap = document.createElement("div");
+          addKey(wrap, "sep");
+          sepCol.appendChild(wrap);
+        }
+        cols.appendChild(sepCol);
+      }
       const rightCell = document.createElement("div");
-      rightCell.className = "kbd-right";
+      rightCell.className = name === "abc" ? "kbd-right kbd-abc-right" : "kbd-right";
       layout.right.forEach(row => {
         const wrap = document.createElement("div");
-        wrap.className = "kbd-right-row";
+        wrap.className = name === "abc" ? "kbd-abc-row" : "kbd-right-row";
         row.forEach(label => addKey(wrap, label));
         rightCell.appendChild(wrap);
       });
-      cols.appendChild(leftCell);
       cols.appendChild(rightCell);
       keyboardRows.appendChild(cols);
     } else {
